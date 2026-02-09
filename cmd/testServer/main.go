@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"testSrv/internal/app"
 	"testSrv/internal/config"
-	stubstorage "testSrv/internal/storage/stubStorage"
+	"testSrv/internal/storage/postgres"
 )
 
 func main() {
@@ -19,12 +19,12 @@ func main() {
 	log.Info("starting logger")
 
 	// init storage
-	/*storage, err := postgres.NewStorage(log, config.StorageConfig)
+	storage, err := postgres.NewStorage(log, config.StorageConfig)
 	if err != nil {
 		log.Error("can't create storage", slog.String("error", err.Error()))
 		os.Exit(1)
-	}*/
-	storage, _ := stubstorage.NewStorage(log) // REMOVE !!!!!!!!!!!!!!!!!!!!!!!!!
+	}
+	//storage, _ := stubstorage.NewStorage(log) // STUB storage
 
 	// init app
 	application := app.New(log, config.ServerConfig, storage)

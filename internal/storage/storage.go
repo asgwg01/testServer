@@ -22,7 +22,7 @@ type ISubscriptionStorage interface {
 	CreateSubscription(subscription models.Subscription) (models.Subscription, error)
 	GetSubscription(uuid string) (models.Subscription, error)
 	GetSubscriptionsWithFilter(filter QueryFilter) ([]models.Subscription, error)
-	UpdateSubscriptions(subscription models.Subscription) (models.Subscription, error)
+	UpdateSubscription(subscription models.Subscription) (models.Subscription, error)
 	DeleteSubscription(uuid string) error
 }
 
@@ -36,7 +36,7 @@ type ISubscriptionGeter interface {
 }
 
 type ISubscriptionUpdater interface {
-	UpdateSubscriptions(subscription models.Subscription) (models.Subscription, error)
+	UpdateSubscription(subscription models.Subscription) (models.Subscription, error)
 }
 
 type ISubscriptionDeleter interface {

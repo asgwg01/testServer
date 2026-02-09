@@ -1,0 +1,28 @@
+services:
+  application:
+    build: .
+    container_name: test_server
+    ports:
+      - 8090:8090
+    depends_on:
+      - pg_service
+
+  pg_service:
+    image: postgres:18-bookworm
+    container_name: pg_service
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: testDB
+      POSTGRES_USER: testUser
+      POSTGRES_PASSWORD: testUserPassword
+    volumes:
+      - .volumes:/var/lib/postgresql/18/docker
+
+volumes:
+  .volumes:
+    driver: local
+
+networks:
+  default:
+    name: test_server_network

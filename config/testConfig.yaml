@@ -1,5 +1,5 @@
 http_server:
-  addres: "localhost:8080"
+  addres: "0.0.0.0:8090"
   timeout: 4s
   idle_timeout: 60s
 

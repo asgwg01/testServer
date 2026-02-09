@@ -1,4 +1,4 @@
-package create
+package update
 
 import (
 	"encoding/json"
@@ -7,24 +7,22 @@ import (
 	"log/slog"
 	"net/http"
 	"testSrv/internal/domain/models"
-	"testSrv/internal/domain/utils"
 	"testSrv/internal/http/handlers"
 	"testSrv/internal/storage"
-	"time"
 )
 
-func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.HandlerFunc {
+func NewHandler(log *slog.Logger, updater storage.ISubscriptionUpdater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const logPrefix = "handlers.create.handler"
+		const logPrefix = "handlers.update.handler"
 		log := log.With(
 			slog.String("where", logPrefix),
 		)
 
 		log.Debug("Recive message", slog.String("method", r.Method), slog.String("url", r.URL.String()))
 
-		dto := handlers.SubscriptionRequestDTO{}
+		changedDto := handlers.SubscriptionFullDTO{}
 
-		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&changedDto); err != nil {
 			log.Error("Error Decode DTO", slog.String("err", err.Error()))
 
 			w.WriteHeader(http.StatusBadRequest)
@@ -41,7 +39,7 @@ func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.Han
 			return
 		}
 
-		if err := handlers.ValidateDTO(dto); err != nil {
+		if err := handlers.ValidateDTO(changedDto.SubscriptionDTO); err != nil {
 			log.Error("Validation error", slog.String("err", err.Error()))
 
 			w.WriteHeader(http.StatusBadRequest)
@@ -56,41 +54,35 @@ func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.Han
 			}
 		}
 
-		if dto.EndDate == nil {
-			// По умолчанию подписка на месяц
-			endDate := dto.StartDate.Time.Add(time.Hour * 24 * 30)
-			dto.EndDate = &endDate
-		}
-
 		subscription := models.Subscription{
-			UUID:        utils.GenerateUUID(),
-			UserUUID:    dto.UserUUID,
-			ServiceName: dto.ServiceName,
-			Price:       dto.Price,
-			StartDate:   dto.StartDate.Time,
-			EndDate:     dto.EndDate,
+			UUID:        changedDto.UUID,
+			UserUUID:    changedDto.UserUUID,
+			ServiceName: changedDto.ServiceName,
+			Price:       changedDto.Price,
+			StartDate:   changedDto.StartDate.Time,
+			EndDate:     changedDto.EndDate,
 		}
 
-		createdSubscription, err := creator.CreateSubscription(subscription)
+		updatedSubscription, err := updater.UpdateSubscription(subscription)
 		if err != nil {
-			if errors.Is(err, storage.ErrorSubscriptionAlreadyExist) {
-				log.Info("Subscription already exist",
+			if errors.Is(err, storage.ErrorSubscriptionNotFound) {
+				log.Info("Subscription not found",
 					slog.String("serviceName", subscription.ServiceName),
 					slog.String("userUUID", subscription.UserUUID),
 				)
 
-				w.WriteHeader(http.StatusConflict)
+				w.WriteHeader(http.StatusNotFound)
 				w.Header().Set("Content-Type", "application/json")
 
 				errDto := handlers.ErrorDTO{
-					Error: "subscription already exist",
+					Error: "subscription not found",
 				}
 				if err := json.NewEncoder(w).Encode(errDto); err != nil {
 					log.Error("Error Encode DTO", slog.String("err", err.Error()))
 					return
 				}
 			} else {
-				log.Info("Error save subscription",
+				log.Info("Error update subscription",
 					slog.String("serviceName", subscription.ServiceName),
 					slog.String("userUUID", subscription.UserUUID),
 				)
@@ -99,7 +91,7 @@ func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.Han
 				w.Header().Set("Content-Type", "application/json")
 
 				errDto := handlers.ErrorDTO{
-					Error: "error save subscription",
+					Error: "error update subscription",
 				}
 				if err := json.NewEncoder(w).Encode(errDto); err != nil {
 					log.Error("Error Encode DTO", slog.String("err", err.Error()))
@@ -109,21 +101,21 @@ func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.Han
 			}
 		}
 
-		createdDto := handlers.SubscriptionFullDTO{
-			UUID: createdSubscription.UUID,
+		updatedDto := handlers.SubscriptionFullDTO{
+			UUID: updatedSubscription.UUID,
 			SubscriptionDTO: handlers.SubscriptionDTO{
-				ServiceName: createdSubscription.ServiceName,
-				UserUUID:    createdSubscription.UserUUID,
-				Price:       createdSubscription.Price,
-				StartDate:   handlers.CstomTime{Time: createdSubscription.StartDate},
-				EndDate:     createdSubscription.EndDate,
+				ServiceName: updatedSubscription.ServiceName,
+				UserUUID:    updatedSubscription.UserUUID,
+				Price:       updatedSubscription.Price,
+				StartDate:   handlers.CstomTime{Time: updatedSubscription.StartDate},
+				EndDate:     updatedSubscription.EndDate,
 			},
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusAccepted)
 		w.Header().Set("Content-Type", "application/json")
 
-		if err := json.NewEncoder(w).Encode(createdDto); err != nil {
+		if err := json.NewEncoder(w).Encode(updatedDto); err != nil {
 			log.Error("Error Encode DTO")
 			return
 		}

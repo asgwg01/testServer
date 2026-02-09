@@ -22,6 +22,7 @@ type ServerConfig struct {
 type StorageConfig struct {
 	StorageHost     string `yaml:"storage_host" nv-required:"true" env:"PG_HOST_NAME"`
 	StoragePort     string `yaml:"storage_port" env-default:"5432" env:"PG_PORT"`
+	StorageDB       string `yaml:"storage_db" nv-required:"true" env:"PG_DB"`
 	StorageUser     string `yaml:"storage_user" nv-required:"true" env:"PG_USER_NAME"`
 	StoragePassword string `yaml:"storage_password" nv-required:"true" env:"PG_USER_PASSWORD"`
 }

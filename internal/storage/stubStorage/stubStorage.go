@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"testSrv/internal/domain/models"
 	"testSrv/internal/storage"
-	"time"
 )
 
 type Storage struct {
@@ -36,17 +35,17 @@ func (s *Storage) GetSubscription(uuid string) (models.Subscription, error) {
 	)
 
 	log.Info("Call STUB", slog.String("Subscription uuid", uuid))
-	//return models.Subscription{}, nil
+	return models.Subscription{}, nil
 
-	endDate := time.Now().Add(time.Hour * 24 * 30)
-	return models.Subscription{
-		UUID:        "1",
-		ServiceName: "Yandex plus",
-		Price:       399,
-		UserUUID:    "1",
-		StartDate:   time.Now(),
-		EndDate:     &endDate,
-	}, nil
+	// endDate := time.Now().Add(time.Hour * 24 * 30)
+	// return models.Subscription{
+	// 	UUID:        "1",
+	// 	ServiceName: "Yandex plus",
+	// 	Price:       399,
+	// 	UserUUID:    "1",
+	// 	StartDate:   time.Now(),
+	// 	EndDate:     &endDate,
+	// }, nil
 }
 
 func (s *Storage) GetSubscriptionsWithFilter(filter storage.QueryFilter) ([]models.Subscription, error) {
@@ -56,38 +55,38 @@ func (s *Storage) GetSubscriptionsWithFilter(filter storage.QueryFilter) ([]mode
 	)
 
 	log.Info("Call STUB", slog.String("Filter", fmt.Sprintf("%T", filter)))
-	//return []models.Subscription{}, nil
+	return []models.Subscription{}, nil
 
-	endDate := time.Now().Add(time.Hour * 24 * 30)
-	return []models.Subscription{
-		{
-			UUID:        "1",
-			ServiceName: "Yandex plus",
-			Price:       399,
-			UserUUID:    "1",
-			StartDate:   time.Now(),
-			EndDate:     &endDate,
-		},
-		{
-			UUID:        "2",
-			ServiceName: "Netflix",
-			Price:       999,
-			UserUUID:    "1",
-			StartDate:   time.Now(),
-			EndDate:     &endDate,
-		},
-		{
-			UUID:        "3",
-			ServiceName: "PlayStation Plus",
-			Price:       9999,
-			UserUUID:    "2",
-			StartDate:   time.Now(),
-			EndDate:     &endDate,
-		},
-	}, nil
+	// endDate := time.Now().Add(time.Hour * 24 * 30)
+	// return []models.Subscription{
+	// 	{
+	// 		UUID:        "1",
+	// 		ServiceName: "Yandex plus",
+	// 		Price:       399,
+	// 		UserUUID:    "1",
+	// 		StartDate:   time.Now(),
+	// 		EndDate:     &endDate,
+	// 	},
+	// 	{
+	// 		UUID:        "2",
+	// 		ServiceName: "Netflix",
+	// 		Price:       999,
+	// 		UserUUID:    "1",
+	// 		StartDate:   time.Now(),
+	// 		EndDate:     &endDate,
+	// 	},
+	// 	{
+	// 		UUID:        "3",
+	// 		ServiceName: "PlayStation Plus",
+	// 		Price:       9999,
+	// 		UserUUID:    "2",
+	// 		StartDate:   time.Now(),
+	// 		EndDate:     &endDate,
+	// 	},
+	// }, nil
 }
 
-func (s *Storage) UpdateSubscriptions(subscription models.Subscription) (models.Subscription, error) {
+func (s *Storage) UpdateSubscription(subscription models.Subscription) (models.Subscription, error) {
 	const logPrefix = "stubstorage.Storage.UpdateSubscriptions"
 	log := s.log.With(
 		slog.String("where", logPrefix),

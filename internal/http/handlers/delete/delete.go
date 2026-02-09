@@ -1,4 +1,4 @@
-package read
+package delete
 
 import (
 	"encoding/json"
@@ -12,9 +12,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.HandlerFunc {
+func NewHandler(log *slog.Logger, deleter storage.ISubscriptionDeleter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const logPrefix = "handlers.read.handler"
+		const logPrefix = "handlers.delete.handler"
 		log := log.With(
 			slog.String("where", logPrefix),
 		)
@@ -41,7 +41,7 @@ func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.Handler
 			return
 		}
 
-		subscription, err := geter.GetSubscription(uuid)
+		err := deleter.DeleteSubscription(uuid)
 		if err != nil {
 			if errors.Is(err, storage.ErrorSubscriptionNotFound) {
 
@@ -64,7 +64,7 @@ func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.Handler
 				w.Header().Set("Content-Type", "application/json")
 
 				errDto := handlers.ErrorDTO{
-					Error: fmt.Sprintf("error get subscription uuid: %s", uuid),
+					Error: fmt.Sprintf("error delete subscription uuid: %s", uuid),
 				}
 				if err := json.NewEncoder(w).Encode(errDto); err != nil {
 					log.Error("Error Encode DTO", slog.String("err", err.Error()))
@@ -75,23 +75,6 @@ func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.Handler
 			return
 		}
 
-		dto := handlers.SubscriptionFullDTO{
-			UUID: subscription.UUID,
-			SubscriptionDTO: handlers.SubscriptionDTO{
-				ServiceName: subscription.ServiceName,
-				Price:       subscription.Price,
-				UserUUID:    subscription.UserUUID,
-				StartDate:   handlers.CstomTime{Time: subscription.StartDate},
-				EndDate:     subscription.EndDate,
-			},
-		}
-
-		w.WriteHeader(http.StatusFound)
-		w.Header().Set("Content-Type", "application/json")
-
-		if err := json.NewEncoder(w).Encode(dto); err != nil {
-			log.Error("Error Encode DTO", slog.String("err", err.Error()))
-			return
-		}
+		w.WriteHeader(http.StatusAccepted)
 	}
 }

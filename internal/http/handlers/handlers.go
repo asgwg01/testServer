@@ -1,6 +1,17 @@
 package handlers
 
-import "time"
+import (
+	"errors"
+	"time"
+)
+
+var (
+	ErrValidateUserUUID    = errors.New("invalid user uuid")
+	ErrValidateServiceName = errors.New("invalid service name")
+	ErrValidatePrice       = errors.New("invalid price")
+	ErrValidateStartDate   = errors.New("invalid start date")
+	ErrValidateEndDate     = errors.New("invalid end date")
+)
 
 type ErrorDTO struct {
 	Error string `json:"error"`
@@ -28,4 +39,41 @@ type SubscriptionDTO struct {
 	UserUUID    string     `json:"user_id"`
 	StartDate   CstomTime  `json:"start_date"`
 	EndDate     *time.Time `json:"end_date,omitempty"`
+}
+
+type SubscriptionRequestDTO = SubscriptionDTO
+
+type SubscriptionFullDTO struct {
+	UUID string `json:"uuid"`
+	SubscriptionDTO
+}
+
+type SubscriptionResponceDTO = SubscriptionFullDTO
+
+func ValidateDTO(dto SubscriptionRequestDTO) error {
+	var err error = nil
+
+	if dto.UserUUID == "" {
+		err = errors.Join(err, ErrValidateUserUUID)
+	}
+
+	if dto.ServiceName == "" {
+		err = errors.Join(err, ErrValidateServiceName)
+	}
+
+	if dto.Price < 0 {
+		err = errors.Join(err, ErrValidatePrice)
+	}
+
+	if dto.StartDate.Time.IsZero() {
+		err = errors.Join(err, ErrValidateStartDate)
+	}
+
+	if dto.EndDate != nil {
+		if dto.EndDate.IsZero() || dto.EndDate.Before(dto.StartDate.Time) {
+			err = errors.Join(err, ErrValidateEndDate)
+		}
+	}
+
+	return err
 }

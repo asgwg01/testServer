@@ -7,16 +7,19 @@ import (
 	"github.com/google/uuid"
 )
 
-func SubscriptionsToDTO(subs []models.Subscription) []handlers.SubscriptionDTO {
-	result := make([]handlers.SubscriptionDTO, len(subs))
+func SubscriptionsToDTO(subs []models.Subscription) []handlers.SubscriptionFullDTO {
+	result := make([]handlers.SubscriptionFullDTO, len(subs))
 
 	for i, s := range subs {
-		result[i] = handlers.SubscriptionDTO{
-			ServiceName: s.ServiceName,
-			Price:       s.Price,
-			UserUUID:    s.UserUUID,
-			StartDate:   handlers.CstomTime{Time: s.StartDate},
-			EndDate:     s.EndDate,
+		result[i] = handlers.SubscriptionFullDTO{
+			UUID: s.UUID,
+			SubscriptionDTO: handlers.SubscriptionDTO{
+				ServiceName: s.ServiceName,
+				Price:       s.Price,
+				UserUUID:    s.UserUUID,
+				StartDate:   handlers.CstomTime{Time: s.StartDate},
+				EndDate:     s.EndDate,
+			},
 		}
 	}
 
