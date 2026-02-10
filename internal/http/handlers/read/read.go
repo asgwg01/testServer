@@ -81,8 +81,8 @@ func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.Handler
 				ServiceName: subscription.ServiceName,
 				Price:       subscription.Price,
 				UserUUID:    subscription.UserUUID,
-				StartDate:   handlers.CstomTime{Time: subscription.StartDate},
-				EndDate:     subscription.EndDate,
+				StartDate:   handlers.CustomTime{Time: subscription.StartDate},
+				EndDate:     &handlers.CustomTime{Time: *subscription.EndDate},
 			},
 		}
 

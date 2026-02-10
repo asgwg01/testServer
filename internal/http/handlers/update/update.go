@@ -60,7 +60,7 @@ func NewHandler(log *slog.Logger, updater storage.ISubscriptionUpdater) http.Han
 			ServiceName: changedDto.ServiceName,
 			Price:       changedDto.Price,
 			StartDate:   changedDto.StartDate.Time,
-			EndDate:     changedDto.EndDate,
+			EndDate:     &changedDto.EndDate.Time,
 		}
 
 		updatedSubscription, err := updater.UpdateSubscription(subscription)
@@ -107,8 +107,8 @@ func NewHandler(log *slog.Logger, updater storage.ISubscriptionUpdater) http.Han
 				ServiceName: updatedSubscription.ServiceName,
 				UserUUID:    updatedSubscription.UserUUID,
 				Price:       updatedSubscription.Price,
-				StartDate:   handlers.CstomTime{Time: updatedSubscription.StartDate},
-				EndDate:     updatedSubscription.EndDate,
+				StartDate:   handlers.CustomTime{Time: updatedSubscription.StartDate},
+				EndDate:     &handlers.CustomTime{Time: *updatedSubscription.EndDate},
 			},
 		}
 

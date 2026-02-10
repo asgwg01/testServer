@@ -1,18 +1,17 @@
-package list
+package cost
 
 import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
-	"testSrv/internal/domain/utils"
 	"testSrv/internal/http/handlers"
 	"testSrv/internal/storage"
 )
 
 func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const logPrefix = "handlers.list.handler"
+		const logPrefix = "handlers.cost.handler"
 		log := log.With(
 			slog.String("where", logPrefix),
 		)
@@ -56,13 +55,28 @@ func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.Handler
 			}
 			return
 		}
+		//cost
+		dto := handlers.CostDTO{}
 
-		dtos := utils.SubscriptionsToDTO(subscriptions)
+		for _, subs := range subscriptions {
+			dto.Cost += subs.Price
+			dto.ServiceCount++
+		}
+		dto.Filter = handlers.FilterDTO{
+			ServiceName: filter.ServiceName,
+			UserUUID:    filter.UserUUID,
+		}
+		if filter.From != nil {
+			dto.Filter.From = &handlers.CustomTime{Time: *filter.From}
+		}
+		if filter.To != nil {
+			dto.Filter.To = &handlers.CustomTime{Time: *filter.To}
+		}
 
 		w.WriteHeader(http.StatusFound)
 		w.Header().Set("Content-Type", "application/json")
 
-		if err := json.NewEncoder(w).Encode(dtos); err != nil {
+		if err := json.NewEncoder(w).Encode(dto); err != nil {
 			log.Error("Error Encode DTO", slog.String("err", err.Error()))
 			return
 		}

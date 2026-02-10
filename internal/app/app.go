@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"testSrv/internal/config"
+	"testSrv/internal/http/handlers/cost"
 	"testSrv/internal/http/handlers/create"
 	"testSrv/internal/http/handlers/delete"
 	"testSrv/internal/http/handlers/list"
@@ -30,6 +31,7 @@ func New(log *slog.Logger, cfg config.ServerConfig, storage storage.ISubscriptio
 	router.HandleFunc("/subscriptions", update.NewHandler(log, storage)).Methods("PATCH")
 	router.HandleFunc("/subscriptions/{uuid}", delete.NewHandler(log, storage)).Methods("DELETE")
 	router.HandleFunc("/subscriptions", list.NewHandler(log, storage)).Methods("GET")
+	router.HandleFunc("/cost", cost.NewHandler(log, storage)).Methods("GET")
 
 	server := &http.Server{
 		Addr:         cfg.Addres,

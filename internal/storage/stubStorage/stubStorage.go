@@ -3,8 +3,8 @@ package stubstorage
 import (
 	"fmt"
 	"log/slog"
+	"testSrv/internal/domain/filter"
 	"testSrv/internal/domain/models"
-	"testSrv/internal/storage"
 )
 
 type Storage struct {
@@ -48,7 +48,7 @@ func (s *Storage) GetSubscription(uuid string) (models.Subscription, error) {
 	// }, nil
 }
 
-func (s *Storage) GetSubscriptionsWithFilter(filter storage.QueryFilter) ([]models.Subscription, error) {
+func (s *Storage) GetSubscriptionsWithFilter(filter filter.QueryFilter) ([]models.Subscription, error) {
 	const logPrefix = "stubstorage.Storage.GetSubscriptionsWithFilter"
 	log := s.log.With(
 		slog.String("where", logPrefix),

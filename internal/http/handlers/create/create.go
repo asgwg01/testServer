@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"testSrv/internal/domain/models"
-	"testSrv/internal/domain/utils"
 	"testSrv/internal/http/handlers"
 	"testSrv/internal/storage"
 	"time"
@@ -59,16 +58,15 @@ func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.Han
 		if dto.EndDate == nil {
 			// По умолчанию подписка на месяц
 			endDate := dto.StartDate.Time.Add(time.Hour * 24 * 30)
-			dto.EndDate = &endDate
+			dto.EndDate = &handlers.CustomTime{Time: endDate}
 		}
 
 		subscription := models.Subscription{
-			UUID:        utils.GenerateUUID(),
 			UserUUID:    dto.UserUUID,
 			ServiceName: dto.ServiceName,
 			Price:       dto.Price,
 			StartDate:   dto.StartDate.Time,
-			EndDate:     dto.EndDate,
+			EndDate:     &dto.EndDate.Time,
 		}
 
 		createdSubscription, err := creator.CreateSubscription(subscription)
@@ -83,12 +81,45 @@ func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.Han
 				w.Header().Set("Content-Type", "application/json")
 
 				errDto := handlers.ErrorDTO{
-					Error: "subscription already exist",
+					Error: fmt.Sprintf("subscription already exist, exist subscription uuid: %s", createdSubscription.UUID),
 				}
 				if err := json.NewEncoder(w).Encode(errDto); err != nil {
 					log.Error("Error Encode DTO", slog.String("err", err.Error()))
 					return
 				}
+				return
+			} else if errors.Is(err, storage.ErrorServiceNotExist) {
+				log.Info("Service is not exist",
+					slog.String("serviceName", subscription.ServiceName),
+				)
+
+				w.WriteHeader(http.StatusNotFound)
+				w.Header().Set("Content-Type", "application/json")
+
+				errDto := handlers.ErrorDTO{
+					Error: fmt.Sprintf("service is not exist, service name: %s", subscription.ServiceName),
+				}
+				if err := json.NewEncoder(w).Encode(errDto); err != nil {
+					log.Error("Error Encode DTO", slog.String("err", err.Error()))
+					return
+				}
+				return
+			} else if errors.Is(err, storage.ErrorUserNotExist) {
+				log.Info("User is not exist",
+					slog.String("user uuid", subscription.UserUUID),
+				)
+
+				w.WriteHeader(http.StatusNotFound)
+				w.Header().Set("Content-Type", "application/json")
+
+				errDto := handlers.ErrorDTO{
+					Error: fmt.Sprintf("user is not exist, user uuid: %s", subscription.UserUUID),
+				}
+				if err := json.NewEncoder(w).Encode(errDto); err != nil {
+					log.Error("Error Encode DTO", slog.String("err", err.Error()))
+					return
+				}
+				return
 			} else {
 				log.Info("Error save subscription",
 					slog.String("serviceName", subscription.ServiceName),
@@ -105,7 +136,7 @@ func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.Han
 					log.Error("Error Encode DTO", slog.String("err", err.Error()))
 					return
 				}
-
+				return
 			}
 		}
 
@@ -115,8 +146,8 @@ func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.Han
 				ServiceName: createdSubscription.ServiceName,
 				UserUUID:    createdSubscription.UserUUID,
 				Price:       createdSubscription.Price,
-				StartDate:   handlers.CstomTime{Time: createdSubscription.StartDate},
-				EndDate:     createdSubscription.EndDate,
+				StartDate:   handlers.CustomTime{Time: createdSubscription.StartDate},
+				EndDate:     &handlers.CustomTime{Time: *createdSubscription.EndDate},
 			},
 		}
 

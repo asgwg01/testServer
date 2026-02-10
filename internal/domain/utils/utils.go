@@ -1,10 +1,10 @@
 package utils
 
 import (
+	"log/slog"
+	"testSrv/internal/domain/filter"
 	"testSrv/internal/domain/models"
 	"testSrv/internal/http/handlers"
-
-	"github.com/google/uuid"
 )
 
 func SubscriptionsToDTO(subs []models.Subscription) []handlers.SubscriptionFullDTO {
@@ -17,8 +17,8 @@ func SubscriptionsToDTO(subs []models.Subscription) []handlers.SubscriptionFullD
 				ServiceName: s.ServiceName,
 				Price:       s.Price,
 				UserUUID:    s.UserUUID,
-				StartDate:   handlers.CstomTime{Time: s.StartDate},
-				EndDate:     s.EndDate,
+				StartDate:   handlers.CustomTime{Time: s.StartDate},
+				EndDate:     &handlers.CustomTime{Time: *s.EndDate},
 			},
 		}
 	}
@@ -26,6 +26,35 @@ func SubscriptionsToDTO(subs []models.Subscription) []handlers.SubscriptionFullD
 	return result
 }
 
-func GenerateUUID() string {
-	return uuid.NewString()
+func SubscriptionToSlog(sub models.Subscription) slog.Attr {
+	result := slog.Group(
+		"subscription",
+		slog.String("uuid", sub.UUID),
+		slog.String("service_name", sub.ServiceName),
+		slog.Int("price", sub.Price),
+		slog.String("user_id", sub.UserUUID),
+		slog.Time("start_date", sub.StartDate),
+		slog.Time("end_date", *sub.EndDate),
+	)
+
+	return result
+}
+
+func FilterToSlog(filter filter.QueryFilter) slog.Attr {
+	reqAttrs := []slog.Attr{
+		slog.String("user_id", filter.UserUUID),
+		slog.String("service_name", filter.ServiceName),
+	}
+
+	if filter.From != nil {
+		reqAttrs = append(reqAttrs, slog.Time("from", *filter.From))
+	}
+
+	if filter.To != nil {
+		reqAttrs = append(reqAttrs, slog.Time("to", *filter.To))
+	}
+
+	result := slog.GroupAttrs("filter", reqAttrs...)
+
+	return result
 }

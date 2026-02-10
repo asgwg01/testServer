@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+	"net/url"
+	"testSrv/internal/domain/filter"
 	"time"
 )
 
@@ -18,11 +20,11 @@ type ErrorDTO struct {
 }
 
 // Для коректного анмаршалинга “07-2025”
-type CstomTime struct {
+type CustomTime struct {
 	Time time.Time
 }
 
-func (ct *CstomTime) UnmarshalJSON(data []byte) error {
+func (ct *CustomTime) UnmarshalJSON(data []byte) error {
 	str := string(data[1 : len(data)-1])
 	layout := "01-2006" // Из текста задания
 	parsedTime, err := time.Parse(layout, str)
@@ -34,11 +36,11 @@ func (ct *CstomTime) UnmarshalJSON(data []byte) error {
 }
 
 type SubscriptionDTO struct {
-	ServiceName string     `json:"service_name"`
-	Price       int        `json:"price"`
-	UserUUID    string     `json:"user_id"`
-	StartDate   CstomTime  `json:"start_date"`
-	EndDate     *time.Time `json:"end_date,omitempty"`
+	ServiceName string      `json:"service_name"`
+	Price       int         `json:"price"`
+	UserUUID    string      `json:"user_id"`
+	StartDate   CustomTime  `json:"start_date"`
+	EndDate     *CustomTime `json:"end_date,omitempty"`
 }
 
 type SubscriptionRequestDTO = SubscriptionDTO
@@ -49,6 +51,19 @@ type SubscriptionFullDTO struct {
 }
 
 type SubscriptionResponceDTO = SubscriptionFullDTO
+
+type FilterDTO struct {
+	ServiceName string      `json:"service_name,omitempty"`
+	UserUUID    string      `json:"user_id,omitempty"`
+	From        *CustomTime `json:"from,omitempty"`
+	To          *CustomTime `json:"to,omitempty"`
+}
+
+type CostDTO struct {
+	Cost         int       `json:"total_cost"`
+	ServiceCount int       `json:"service_count"`
+	Filter       FilterDTO `json:"filter"`
+}
 
 func ValidateDTO(dto SubscriptionRequestDTO) error {
 	var err error = nil
@@ -70,10 +85,55 @@ func ValidateDTO(dto SubscriptionRequestDTO) error {
 	}
 
 	if dto.EndDate != nil {
-		if dto.EndDate.IsZero() || dto.EndDate.Before(dto.StartDate.Time) {
+		if dto.EndDate.Time.IsZero() || dto.EndDate.Time.Before(dto.StartDate.Time) {
 			err = errors.Join(err, ErrValidateEndDate)
 		}
 	}
 
 	return err
+}
+
+func ParseQueryFilter(url *url.URL) (filter.QueryFilter, error) {
+	var from time.Time
+	if fromStr := url.Query().Get("from"); fromStr != "" {
+		layout := "01-2006" // Из текста задания
+		parsedTime, err := time.Parse(layout, fromStr)
+		if err != nil {
+			return filter.QueryFilter{}, err
+		}
+		from = parsedTime
+	}
+
+	var to time.Time
+	if toStr := url.Query().Get("to"); toStr != "" {
+		layout := "01-2006" // Из текста задания
+		parsedTime, err := time.Parse(layout, toStr)
+		if err != nil {
+			return filter.QueryFilter{}, err
+		}
+		to = parsedTime
+	}
+
+	var userUuid string
+	if userUuidStr := url.Query().Get("user_uuid"); userUuidStr != "" {
+		userUuid = userUuidStr
+	}
+
+	var serviceName string
+	if serviceNameStr := url.Query().Get("service_name"); serviceNameStr != "" {
+		serviceName = serviceNameStr
+	}
+
+	filter := filter.QueryFilter{
+		UserUUID:    userUuid,
+		ServiceName: serviceName,
+	}
+	if !from.IsZero() {
+		filter.From = &from
+	}
+	if !to.IsZero() {
+		filter.To = &to
+	}
+
+	return filter, nil
 }
