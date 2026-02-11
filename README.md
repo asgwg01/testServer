@@ -12,7 +12,7 @@
 - List `localhost:8090/subscriptions` GET 
 
 ### Для подсчета суммарной стоимости:
-- Cost `localhost:8090/subscriptions` GET 
+- Cost `localhost:8090/cost` GET 
 
 ### Swagger UI
 - [localhost:8090/swagger/index.html](http://localhost:8090/swagger/index.html)
