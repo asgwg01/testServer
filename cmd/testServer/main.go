@@ -8,8 +8,16 @@ import (
 	"testSrv/internal/app"
 	"testSrv/internal/config"
 	"testSrv/internal/storage/postgres"
+
+	_ "testSrv/docs"
 )
 
+// @title Тестовое задание
+// @version 1.0
+// @description REST Сервер для агрегации данных о подписках пользователей на сервисы
+// @host localhost:8090
+// @BasePath /
+// @schemes http https
 func main() {
 	// init config
 	config := config.LoadConfig()
@@ -27,7 +35,7 @@ func main() {
 	//storage, _ := stubstorage.NewStorage(log) // STUB storage
 
 	// init app
-	application := app.New(log, config.ServerConfig, storage)
+	application := app.New(log, *config, storage)
 	go application.Start()
 
 	// graceful shutdown

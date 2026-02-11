@@ -1,0 +1,353 @@
+basePath: /
+definitions:
+  handlers.CostDTO:
+    properties:
+      filter:
+        allOf:
+        - $ref: '#/definitions/handlers.FilterDTO'
+        description: Filter фильтр использованный для получения результата
+      service_count:
+        description: |-
+          ServiceCount количество всех отфильтрованных подписок
+          minimum: 0
+          example: 4
+        type: integer
+      total_cost:
+        description: |-
+          Cost суммарная стоимость всех отфильтрованных подписок в рублях в месяц, целое число
+          minimum: 0
+          example: 798
+        type: integer
+    type: object
+  handlers.CustomTime:
+    properties:
+      time:
+        type: string
+    type: object
+  handlers.ErrorDTO:
+    properties:
+      error:
+        type: string
+    type: object
+  handlers.FilterDTO:
+    properties:
+      from:
+        allOf:
+        - $ref: '#/definitions/handlers.CustomTime'
+        description: |-
+          From месяц старта подписки
+          format: date-time
+          example: 07-2025
+      service_name:
+        description: |-
+          ServiceName название сервиса подписки
+          minLength: 1
+          maxLength: 100
+          example: Яндекс плюс
+        type: string
+      to:
+        allOf:
+        - $ref: '#/definitions/handlers.CustomTime'
+        description: |-
+          EndDate месяц окончания подписки
+          format: date-time
+          nullable: true
+          example: null
+      user_id:
+        description: |-
+          UserUUID UUID пользователя
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+    type: object
+  handlers.SubscriptionResponceDTO:
+    properties:
+      end_date:
+        allOf:
+        - $ref: '#/definitions/handlers.CustomTime'
+        description: |-
+          EndDate месяц окончания подписки
+          format: date-time
+          nullable: true
+          example: null
+      price:
+        description: |-
+          Price стоимость подписки в рублях в месяц, целое число
+          minimum: 1
+          example: 399
+        type: integer
+      service_name:
+        description: |-
+          ServiceName название сервиса подписки
+          minLength: 1
+          maxLength: 100
+          example: Яндекс плюс
+        type: string
+      start_date:
+        allOf:
+        - $ref: '#/definitions/handlers.CustomTime'
+        description: |-
+          StartDate месяц старта подписки
+          format: date-time
+          example: 07-2025
+      user_id:
+        description: |-
+          UserUUID UUID пользователя
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      uuid:
+        description: |-
+          UserUUID UUID подписки
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+    type: object
+host: localhost:8090
+info:
+  contact: {}
+  description: REST Сервер для агрегации данных о подписках пользователей на сервисы
+  title: Тестовое задание
+  version: "1.0"
+paths:
+  /cost:
+    get:
+      description: |-
+        Возвращает информацию о суммарной стоимости и количестве подписок удовлетворяющих фильтрам.
+        Также возвращает указанные фильтры
+      parameters:
+      - default: '""'
+        description: uuid пользователя для которого будут фильтроваться подписки
+        example: '"123e4567-e89b-12d3-a456-426614174000"'
+        in: query
+        name: user_uuid
+        type: string
+      - default: '""'
+        description: Имя сервиса для которого будут фильтроваться подписки
+        example: '"Яндекс плюс"'
+        in: query
+        name: service_name
+        type: string
+      - description: С какого месяца фильтруются подписки
+        in: query
+        name: from
+        type: integer
+      - description: До какого месяца фильтруются подписки
+        in: query
+        name: to
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Все подписки удовлетворяющие фильтрам
+          schema:
+            $ref: '#/definitions/handlers.CostDTO'
+        "400":
+          description: Неверный запрос, неверные фильтры, ошибка в формате даты
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+        "500":
+          description: Внутренняя ошибка работы сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+      summary: Получение информации о стоимости подписок с использованием фильтра
+      tags:
+      - Стоимость
+  /subscriptions:
+    get:
+      description: Возвращает полную информацию о нескольких подписках, удовлетворяющих
+        параметрам фильтрации
+      parameters:
+      - default: '""'
+        description: uuid пользователя для которого будут фильтроваться подписки
+        example: '"123e4567-e89b-12d3-a456-426614174000"'
+        in: query
+        name: user_uuid
+        type: string
+      - default: '""'
+        description: Имя сервиса для которого будут фильтроваться подписки
+        example: '"Яндекс плюс"'
+        in: query
+        name: service_name
+        type: string
+      - description: С какого месяца фильтруются подписки
+        in: query
+        name: from
+        type: integer
+      - description: До какого месяца фильтруются подписки
+        in: query
+        name: to
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Все подписки удовлетворяющие фильтрам
+          schema:
+            items:
+              $ref: '#/definitions/handlers.SubscriptionResponceDTO'
+            type: array
+        "400":
+          description: Неверный запрос, неверные фильтры, ошибка в формате даты
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+        "500":
+          description: Внутренняя ошибка работы сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+      summary: Получение информации о подписках с использованием фильтра
+      tags:
+      - Подписки
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        Изменяет существующую подписку с указанным во входящем json(назовем входящий json как in) uuid.
+        Изменяет service_name на сервис с именем in.service_name.
+        Изменяет user_id на uuid пользователя in.user_id. В поле user_id на самом деле лежит UUID.
+        Изменяет price на in.price.
+        Изменяет start_date на in.start_date.
+        Изменяет end_date на in.end_date.
+        Если пользователя с in.user_id не существует, или не существует сервиса с именем in.service_name
+        то ничего не меняет и возвращает ошибку с указанной причиной.
+        Валидация: in.user_id, in.service_name не должны быть пустыми. in.price не отрицательное, целое число
+        in.start_date задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
+        in.end_date может быть не задано, но если задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
+        а также не может быть ранее in.start_date
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Созданная подписка
+          schema:
+            $ref: '#/definitions/handlers.SubscriptionResponceDTO'
+        "400":
+          description: Неверный запрос, ошибка во входящем json, ошибка валидации
+            json
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+        "404":
+          description: Не найдена подписка с указанным in.uuid
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+        "500":
+          description: Внутренняя ошибка работы сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+      summary: Изменение подписки
+      tags:
+      - Подписки
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Создает для пользователя user_id (на самом деле передается UUID)
+        подписку на сервис с именем service_name.
+        price - цена подписки за месяц, указывается целое число рублей
+        Подписка действует с первого числа месяца указанного в start_date. Формат "ММ-ГГГГ" (например 07-2025).
+        По умолчанию подписка дейтвует 30 дней, можно указать end_date в таком же формате - "ММ-ГГГГ",
+        тогда подписка будет действовать до первого числа указанного в end_date месяца. end_date - не обязательный параметр.
+        Если пользователя с таким uuid не существует, или не существует сервиса с именем service_name
+        то ничего не создает и возвращает ошибку с указанной причиной.
+        Валидация: user_id, service_name не должны быть пустыми. price не отрицательное, целое число
+        start_date задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
+        end_date может быть не задано, но если задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
+        а также не может быть ранее start_date
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Созданная подписка
+          schema:
+            $ref: '#/definitions/handlers.SubscriptionResponceDTO'
+        "400":
+          description: Неверный запрос, ошибка во входящем json, ошибка валидации
+            json
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+        "404":
+          description: Не найден пользователем с указанным user_id или сервис с именем
+            service_name
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+        "409":
+          description: У пользователя уже существует подписка на сервис и время действия
+            подписок пересекается
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+        "500":
+          description: Внутренняя ошибка работы сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+      summary: Создание новой подписки
+      tags:
+      - Подписки
+  /subscriptions/{uuid}:
+    delete:
+      description: |-
+        Удаляет существующую подписку с указанным uuid.
+        Если подписки с таким uuid не существует, ничего не делает, возвращает информацию о ошибке.
+      parameters:
+      - description: UUID подписки
+        example: '"123e4567-e89b-12d3-a456-426614174000"'
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Подписка удалена
+        "400":
+          description: Неверный запрос, пустой uuid
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+        "404":
+          description: Не найдена подписка с указанным uuid
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+        "500":
+          description: Внутренняя ошибка работы сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+      summary: Удаление подписки
+      tags:
+      - Подписки
+    get:
+      description: Возвращает полную информацию об одной подписке, по предоставленному
+        UUID
+      parameters:
+      - description: UUID подписки
+        example: '"123e4567-e89b-12d3-a456-426614174000"'
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Найденная подписка пользователя
+          schema:
+            $ref: '#/definitions/handlers.SubscriptionResponceDTO'
+        "400":
+          description: Неверный запрос, пустой uuid
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+        "404":
+          description: Подписка с таким uuid не найдена
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+        "500":
+          description: Внутренняя ошибка работы сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorDTO'
+      summary: Получение информации о подписке по UUID
+      tags:
+      - Подписки
+schemes:
+- http
+- https
+swagger: "2.0"

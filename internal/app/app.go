@@ -15,6 +15,7 @@ import (
 	"testSrv/internal/storage"
 
 	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type App struct {
@@ -23,7 +24,7 @@ type App struct {
 	storage storage.ISubscriptionStorage
 }
 
-func New(log *slog.Logger, cfg config.ServerConfig, storage storage.ISubscriptionStorage) *App {
+func New(log *slog.Logger, cfg config.Config, storage storage.ISubscriptionStorage) *App {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/subscriptions", create.NewHandler(log, storage)).Methods("POST")
@@ -32,6 +33,10 @@ func New(log *slog.Logger, cfg config.ServerConfig, storage storage.ISubscriptio
 	router.HandleFunc("/subscriptions/{uuid}", delete.NewHandler(log, storage)).Methods("DELETE")
 	router.HandleFunc("/subscriptions", list.NewHandler(log, storage)).Methods("GET")
 	router.HandleFunc("/cost", cost.NewHandler(log, storage)).Methods("GET")
+
+	if cfg.SwaggerConfig.NeedRuning {
+		router.PathPrefix(cfg.SwaggerConfig.URL).Handler(httpSwagger.WrapHandler)
+	}
 
 	server := &http.Server{
 		Addr:         cfg.Addres,

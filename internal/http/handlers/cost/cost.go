@@ -9,6 +9,20 @@ import (
 	"testSrv/internal/storage"
 )
 
+// GetSubscriptionsCost godoc
+// @Summary Получение информации о стоимости подписок с использованием фильтра
+// @Description Возвращает информацию о суммарной стоимости и количестве подписок удовлетворяющих фильтрам.
+// @Description Также возвращает указанные фильтры
+// @Tags Стоимость
+// @Produce json
+// @Param user_uuid query string false "uuid пользователя для которого будут фильтроваться подписки" example("123e4567-e89b-12d3-a456-426614174000") default("")
+// @Param service_name query string false "Имя сервиса для которого будут фильтроваться подписки" example("Яндекс плюс") default("")
+// @Param from query int false "С какого месяца фильтруются подписки" format:"date-time" example("07-2025")
+// @Param to query int false "До какого месяца фильтруются подписки" format:"date-time" example("07-2025")
+// @Success 200 {object} handlers.CostDTO "Все подписки удовлетворяющие фильтрам"
+// @Failure 400 {object} handlers.ErrorDTO "Неверный запрос, неверные фильтры, ошибка в формате даты"
+// @Failure 500 {object} handlers.ErrorDTO "Внутренняя ошибка работы сервера"
+// @Router /cost [get]
 func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const logPrefix = "handlers.cost.handler"
@@ -73,7 +87,7 @@ func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.Handler
 			dto.Filter.To = &handlers.CustomTime{Time: *filter.To}
 		}
 
-		w.WriteHeader(http.StatusFound)
+		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 
 		if err := json.NewEncoder(w).Encode(dto); err != nil {

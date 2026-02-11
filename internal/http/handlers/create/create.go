@@ -12,6 +12,29 @@ import (
 	"time"
 )
 
+// CreateSubscription godoc
+// @Summary Создание новой подписки
+// @Description Создает для пользователя user_id (на самом деле передается UUID)
+// @Description подписку на сервис с именем service_name.
+// @Description price - цена подписки за месяц, указывается целое число рублей
+// @Description Подписка действует с первого числа месяца указанного в start_date. Формат "ММ-ГГГГ" (например 07-2025).
+// @Description По умолчанию подписка дейтвует 30 дней, можно указать end_date в таком же формате - "ММ-ГГГГ",
+// @Description тогда подписка будет действовать до первого числа указанного в end_date месяца. end_date - не обязательный параметр.
+// @Description Если пользователя с таким uuid не существует, или не существует сервиса с именем service_name
+// @Description то ничего не создает и возвращает ошибку с указанной причиной.
+// @Description Валидация: user_id, service_name не должны быть пустыми. price не отрицательное, целое число
+// @Description start_date задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
+// @Description end_date может быть не задано, но если задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
+// @Description а также не может быть ранее start_date
+// @Tags Подписки
+// @Accept json
+// @Produce json
+// @Success 201 {object} handlers.SubscriptionResponceDTO "Созданная подписка"
+// @Failure 400 {object} handlers.ErrorDTO "Неверный запрос, ошибка во входящем json, ошибка валидации json"
+// @Failure 409 {object} handlers.ErrorDTO "У пользователя уже существует подписка на сервис и время действия подписок пересекается"
+// @Failure 404 {object} handlers.ErrorDTO "Не найден пользователем с указанным user_id или сервис с именем service_name"
+// @Failure 500 {object} handlers.ErrorDTO "Внутренняя ошибка работы сервера"
+// @Router /subscriptions [post]
 func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const logPrefix = "handlers.create.handler"
@@ -140,7 +163,7 @@ func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.Han
 			}
 		}
 
-		createdDto := handlers.SubscriptionFullDTO{
+		createdDto := handlers.SubscriptionResponceDTO{
 			UUID: createdSubscription.UUID,
 			SubscriptionDTO: handlers.SubscriptionDTO{
 				ServiceName: createdSubscription.ServiceName,

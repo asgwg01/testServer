@@ -11,6 +11,28 @@ import (
 	"testSrv/internal/storage"
 )
 
+// UpdateSubscription godoc
+// @Summary Изменение подписки
+// @Description Изменяет существующую подписку с указанным во входящем json(назовем входящий json как in) uuid.
+// @Description Изменяет service_name на сервис с именем in.service_name.
+// @Description Изменяет user_id на uuid пользователя in.user_id. В поле user_id на самом деле лежит UUID.
+// @Description Изменяет price на in.price.
+// @Description Изменяет start_date на in.start_date.
+// @Description Изменяет end_date на in.end_date.
+// @Description Если пользователя с in.user_id не существует, или не существует сервиса с именем in.service_name
+// @Description то ничего не меняет и возвращает ошибку с указанной причиной.
+// @Description Валидация: in.user_id, in.service_name не должны быть пустыми. in.price не отрицательное, целое число
+// @Description in.start_date задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
+// @Description in.end_date может быть не задано, но если задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
+// @Description а также не может быть ранее in.start_date
+// @Tags Подписки
+// @Accept json
+// @Produce json
+// @Success 201 {object} handlers.SubscriptionResponceDTO "Созданная подписка"
+// @Failure 400 {object} handlers.ErrorDTO "Неверный запрос, ошибка во входящем json, ошибка валидации json"
+// @Failure 404 {object} handlers.ErrorDTO "Не найдена подписка с указанным in.uuid"
+// @Failure 500 {object} handlers.ErrorDTO "Внутренняя ошибка работы сервера"
+// @Router /subscriptions [patch]
 func NewHandler(log *slog.Logger, updater storage.ISubscriptionUpdater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const logPrefix = "handlers.update.handler"
@@ -101,7 +123,7 @@ func NewHandler(log *slog.Logger, updater storage.ISubscriptionUpdater) http.Han
 			}
 		}
 
-		updatedDto := handlers.SubscriptionFullDTO{
+		updatedDto := handlers.SubscriptionResponceDTO{
 			UUID: updatedSubscription.UUID,
 			SubscriptionDTO: handlers.SubscriptionDTO{
 				ServiceName: updatedSubscription.ServiceName,

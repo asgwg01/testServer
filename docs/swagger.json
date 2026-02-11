@@ -1,0 +1,424 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "REST Сервер для агрегации данных о подписках пользователей на сервисы",
+        "title": "Тестовое задание",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8090",
+    "basePath": "/",
+    "paths": {
+        "/cost": {
+            "get": {
+                "description": "Возвращает информацию о суммарной стоимости и количестве подписок удовлетворяющих фильтрам.\nТакже возвращает указанные фильтры",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Стоимость"
+                ],
+                "summary": "Получение информации о стоимости подписок с использованием фильтра",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "\"\"",
+                        "example": "\"123e4567-e89b-12d3-a456-426614174000\"",
+                        "description": "uuid пользователя для которого будут фильтроваться подписки",
+                        "name": "user_uuid",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"\"",
+                        "example": "\"Яндекс плюс\"",
+                        "description": "Имя сервиса для которого будут фильтроваться подписки",
+                        "name": "service_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "С какого месяца фильтруются подписки",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "До какого месяца фильтруются подписки",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Все подписки удовлетворяющие фильтрам",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CostDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос, неверные фильтры, ошибка в формате даты",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка работы сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscriptions": {
+            "get": {
+                "description": "Возвращает полную информацию о нескольких подписках, удовлетворяющих параметрам фильтрации",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Подписки"
+                ],
+                "summary": "Получение информации о подписках с использованием фильтра",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "\"\"",
+                        "example": "\"123e4567-e89b-12d3-a456-426614174000\"",
+                        "description": "uuid пользователя для которого будут фильтроваться подписки",
+                        "name": "user_uuid",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"\"",
+                        "example": "\"Яндекс плюс\"",
+                        "description": "Имя сервиса для которого будут фильтроваться подписки",
+                        "name": "service_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "С какого месяца фильтруются подписки",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "До какого месяца фильтруются подписки",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Все подписки удовлетворяющие фильтрам",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.SubscriptionResponceDTO"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос, неверные фильтры, ошибка в формате даты",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка работы сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создает для пользователя user_id (на самом деле передается UUID)\nподписку на сервис с именем service_name.\nprice - цена подписки за месяц, указывается целое число рублей\nПодписка действует с первого числа месяца указанного в start_date. Формат \"ММ-ГГГГ\" (например 07-2025).\nПо умолчанию подписка дейтвует 30 дней, можно указать end_date в таком же формате - \"ММ-ГГГГ\",\nтогда подписка будет действовать до первого числа указанного в end_date месяца. end_date - не обязательный параметр.\nЕсли пользователя с таким uuid не существует, или не существует сервиса с именем service_name\nто ничего не создает и возвращает ошибку с указанной причиной.\nВалидация: user_id, service_name не должны быть пустыми. price не отрицательное, целое число\nstart_date задано, имеет формат \"ММ-ГГГГ\" и отличается 01-1970 (т.е. не по умолчанию)\nend_date может быть не задано, но если задано, имеет формат \"ММ-ГГГГ\" и отличается 01-1970 (т.е. не по умолчанию)\nа также не может быть ранее start_date",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Подписки"
+                ],
+                "summary": "Создание новой подписки",
+                "responses": {
+                    "201": {
+                        "description": "Созданная подписка",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SubscriptionResponceDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос, ошибка во входящем json, ошибка валидации json",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Не найден пользователем с указанным user_id или сервис с именем service_name",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    },
+                    "409": {
+                        "description": "У пользователя уже существует подписка на сервис и время действия подписок пересекается",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка работы сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Изменяет существующую подписку с указанным во входящем json(назовем входящий json как in) uuid.\nИзменяет service_name на сервис с именем in.service_name.\nИзменяет user_id на uuid пользователя in.user_id. В поле user_id на самом деле лежит UUID.\nИзменяет price на in.price.\nИзменяет start_date на in.start_date.\nИзменяет end_date на in.end_date.\nЕсли пользователя с in.user_id не существует, или не существует сервиса с именем in.service_name\nто ничего не меняет и возвращает ошибку с указанной причиной.\nВалидация: in.user_id, in.service_name не должны быть пустыми. in.price не отрицательное, целое число\nin.start_date задано, имеет формат \"ММ-ГГГГ\" и отличается 01-1970 (т.е. не по умолчанию)\nin.end_date может быть не задано, но если задано, имеет формат \"ММ-ГГГГ\" и отличается 01-1970 (т.е. не по умолчанию)\nа также не может быть ранее in.start_date",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Подписки"
+                ],
+                "summary": "Изменение подписки",
+                "responses": {
+                    "201": {
+                        "description": "Созданная подписка",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SubscriptionResponceDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос, ошибка во входящем json, ошибка валидации json",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Не найдена подписка с указанным in.uuid",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка работы сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscriptions/{uuid}": {
+            "get": {
+                "description": "Возвращает полную информацию об одной подписке, по предоставленному UUID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Подписки"
+                ],
+                "summary": "Получение информации о подписке по UUID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"123e4567-e89b-12d3-a456-426614174000\"",
+                        "description": "UUID подписки",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Найденная подписка пользователя",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SubscriptionResponceDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос, пустой uuid",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Подписка с таким uuid не найдена",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка работы сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет существующую подписку с указанным uuid.\nЕсли подписки с таким uuid не существует, ничего не делает, возвращает информацию о ошибке.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Подписки"
+                ],
+                "summary": "Удаление подписки",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"123e4567-e89b-12d3-a456-426614174000\"",
+                        "description": "UUID подписки",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Подписка удалена"
+                    },
+                    "400": {
+                        "description": "Неверный запрос, пустой uuid",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Не найдена подписка с указанным uuid",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка работы сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorDTO"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handlers.CostDTO": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "description": "Filter фильтр использованный для получения результата",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/handlers.FilterDTO"
+                        }
+                    ]
+                },
+                "service_count": {
+                    "description": "ServiceCount количество всех отфильтрованных подписок\nminimum: 0\nexample: 4",
+                    "type": "integer"
+                },
+                "total_cost": {
+                    "description": "Cost суммарная стоимость всех отфильтрованных подписок в рублях в месяц, целое число\nminimum: 0\nexample: 798",
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.CustomTime": {
+            "type": "object",
+            "properties": {
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.ErrorDTO": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.FilterDTO": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "description": "From месяц старта подписки\nformat: date-time\nexample: 07-2025",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/handlers.CustomTime"
+                        }
+                    ]
+                },
+                "service_name": {
+                    "description": "ServiceName название сервиса подписки\nminLength: 1\nmaxLength: 100\nexample: Яндекс плюс",
+                    "type": "string"
+                },
+                "to": {
+                    "description": "EndDate месяц окончания подписки\nformat: date-time\nnullable: true\nexample: null",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/handlers.CustomTime"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "description": "UserUUID UUID пользователя\nformat: uuid\nexample: 123e4567-e89b-12d3-a456-426614174000",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.SubscriptionResponceDTO": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "description": "EndDate месяц окончания подписки\nformat: date-time\nnullable: true\nexample: null",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/handlers.CustomTime"
+                        }
+                    ]
+                },
+                "price": {
+                    "description": "Price стоимость подписки в рублях в месяц, целое число\nminimum: 1\nexample: 399",
+                    "type": "integer"
+                },
+                "service_name": {
+                    "description": "ServiceName название сервиса подписки\nminLength: 1\nmaxLength: 100\nexample: Яндекс плюс",
+                    "type": "string"
+                },
+                "start_date": {
+                    "description": "StartDate месяц старта подписки\nformat: date-time\nexample: 07-2025",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/handlers.CustomTime"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "description": "UserUUID UUID пользователя\nformat: uuid\nexample: 123e4567-e89b-12d3-a456-426614174000",
+                    "type": "string"
+                },
+                "uuid": {
+                    "description": "UserUUID UUID подписки\nformat: uuid\nexample: 123e4567-e89b-12d3-a456-426614174000",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

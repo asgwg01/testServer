@@ -28,3 +28,6 @@ postgres-migrate-up:
 
 postgres-migrate-down:
 	migrate -path migrations -database "postgres://${PG_USER_NAME}:${PG_USER_PASSWORD}@localhost:${PG_PORT}/${PG_DB}?sslmode=disable" down
+
+swagger-init:
+	swag init -g cmd/testServer/main.go

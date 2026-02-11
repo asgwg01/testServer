@@ -7,3 +7,7 @@ storage:
   storage_host: "localhost"
   storage_user: "postgres"
   storage_password: "0000"
+
+swagger:
+  run_swagger_ui: true
+  swagger_url: "/swagger/"

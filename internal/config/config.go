@@ -11,6 +11,7 @@ import (
 type Config struct {
 	ServerConfig  `yaml:"http_server"`
 	StorageConfig `yaml:"storage"`
+	SwaggerConfig `yaml:"swagger"`
 }
 
 type ServerConfig struct {
@@ -27,9 +28,13 @@ type StorageConfig struct {
 	StoragePassword string `yaml:"storage_password" nv-required:"true" env:"PG_USER_PASSWORD"`
 }
 
+type SwaggerConfig struct {
+	NeedRuning bool   `yaml:"run_swagger_ui" env-default:"false"`
+	URL        string `yaml:"swagger_url" env-default:"/swagger/"`
+}
+
 func LoadConfig() *Config {
 	path := os.Getenv("CONFIG_PATH")
-
 	if len(path) == 0 {
 		log.Fatal("path is empty CONFIG_PATH not set")
 	}

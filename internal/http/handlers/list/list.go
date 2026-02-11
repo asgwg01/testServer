@@ -10,6 +10,19 @@ import (
 	"testSrv/internal/storage"
 )
 
+// GetSubscriptionList godoc
+// @Summary Получение информации о подписках с использованием фильтра
+// @Description Возвращает полную информацию о нескольких подписках, удовлетворяющих параметрам фильтрации
+// @Tags Подписки
+// @Produce json
+// @Param user_uuid query string false "uuid пользователя для которого будут фильтроваться подписки" example("123e4567-e89b-12d3-a456-426614174000") default("")
+// @Param service_name query string false "Имя сервиса для которого будут фильтроваться подписки" example("Яндекс плюс") default("")
+// @Param from query int false "С какого месяца фильтруются подписки" format:"date-time" example("07-2025")
+// @Param to query int false "До какого месяца фильтруются подписки" format:"date-time" example("07-2025")
+// @Success 200 {array} handlers.SubscriptionResponceDTO "Все подписки удовлетворяющие фильтрам"
+// @Failure 400 {object} handlers.ErrorDTO "Неверный запрос, неверные фильтры, ошибка в формате даты"
+// @Failure 500 {object} handlers.ErrorDTO "Внутренняя ошибка работы сервера"
+// @Router /subscriptions [get]
 func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const logPrefix = "handlers.list.handler"
@@ -23,7 +36,7 @@ func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.Handler
 		if err != nil {
 			log.Error("failed to parse data", slog.String("err", err.Error()))
 
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			w.Header().Set("Content-Type", "application/json")
 
 			errDto := handlers.ErrorDTO{
@@ -59,7 +72,7 @@ func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.Handler
 
 		dtos := utils.SubscriptionsToDTO(subscriptions)
 
-		w.WriteHeader(http.StatusFound)
+		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 
 		if err := json.NewEncoder(w).Encode(dtos); err != nil {

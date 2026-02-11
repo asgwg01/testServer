@@ -12,6 +12,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// DeleteSubscription godoc
+// @Summary Удаление подписки
+// @Description Удаляет существующую подписку с указанным uuid.
+// @Description Если подписки с таким uuid не существует, ничего не делает, возвращает информацию о ошибке.
+// @Tags Подписки
+// @Produce json
+// @Param uuid path string true "UUID подписки" example("123e4567-e89b-12d3-a456-426614174000")
+// @Success 202 "Подписка удалена"
+// @Failure 400 {object} handlers.ErrorDTO "Неверный запрос, пустой uuid"
+// @Failure 404 {object} handlers.ErrorDTO "Не найдена подписка с указанным uuid"
+// @Failure 500 {object} handlers.ErrorDTO "Внутренняя ошибка работы сервера"
+// @Router /subscriptions/{uuid} [delete]
 func NewHandler(log *slog.Logger, deleter storage.ISubscriptionDeleter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const logPrefix = "handlers.delete.handler"

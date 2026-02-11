@@ -35,34 +35,79 @@ func (ct *CustomTime) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// SubscriptionDTO DTO для описания подписки
 type SubscriptionDTO struct {
-	ServiceName string      `json:"service_name"`
-	Price       int         `json:"price"`
-	UserUUID    string      `json:"user_id"`
-	StartDate   CustomTime  `json:"start_date"`
-	EndDate     *CustomTime `json:"end_date,omitempty"`
+	// ServiceName название сервиса подписки
+	// minLength: 1
+	// maxLength: 100
+	// example: Яндекс плюс
+	ServiceName string `json:"service_name"`
+	// Price стоимость подписки в рублях в месяц, целое число
+	// minimum: 1
+	// example: 399
+	Price int `json:"price"`
+	// UserUUID UUID пользователя
+	// format: uuid
+	// example: 123e4567-e89b-12d3-a456-426614174000
+	UserUUID string `json:"user_id"`
+	// StartDate месяц старта подписки
+	// format: date-time
+	// example: 07-2025
+	StartDate CustomTime `json:"start_date"`
+	// EndDate месяц окончания подписки
+	// format: date-time
+	// nullable: true
+	// example: null
+	EndDate *CustomTime `json:"end_date,omitempty"`
 }
 
 type SubscriptionRequestDTO = SubscriptionDTO
 
+// SubscriptionFullDTO DTO для описания подписки с UUID
 type SubscriptionFullDTO struct {
+	// UserUUID UUID подписки
+	// format: uuid
+	// example: 123e4567-e89b-12d3-a456-426614174000
 	UUID string `json:"uuid"`
 	SubscriptionDTO
 }
 
 type SubscriptionResponceDTO = SubscriptionFullDTO
 
+// FilterDTO DTO для описания фильтрации подписок
 type FilterDTO struct {
-	ServiceName string      `json:"service_name,omitempty"`
-	UserUUID    string      `json:"user_id,omitempty"`
-	From        *CustomTime `json:"from,omitempty"`
-	To          *CustomTime `json:"to,omitempty"`
+	// ServiceName название сервиса подписки
+	// minLength: 1
+	// maxLength: 100
+	// example: Яндекс плюс
+	ServiceName string `json:"service_name,omitempty"`
+	// UserUUID UUID пользователя
+	// format: uuid
+	// example: 123e4567-e89b-12d3-a456-426614174000
+	UserUUID string `json:"user_id,omitempty"`
+	// From месяц старта подписки
+	// format: date-time
+	// example: 07-2025
+	From *CustomTime `json:"from,omitempty"`
+	// EndDate месяц окончания подписки
+	// format: date-time
+	// nullable: true
+	// example: null
+	To *CustomTime `json:"to,omitempty"`
 }
 
+// FilterDTO DTO для описания суммарной стоимости и количества отфильтрованных подписок
 type CostDTO struct {
-	Cost         int       `json:"total_cost"`
-	ServiceCount int       `json:"service_count"`
-	Filter       FilterDTO `json:"filter"`
+	// Cost суммарная стоимость всех отфильтрованных подписок в рублях в месяц, целое число
+	// minimum: 0
+	// example: 798
+	Cost int `json:"total_cost"`
+	// ServiceCount количество всех отфильтрованных подписок
+	// minimum: 0
+	// example: 4
+	ServiceCount int `json:"service_count"`
+	// Filter фильтр использованный для получения результата
+	Filter FilterDTO `json:"filter"`
 }
 
 func ValidateDTO(dto SubscriptionRequestDTO) error {

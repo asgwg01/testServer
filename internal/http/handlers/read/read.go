@@ -12,6 +12,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// GetSubscription godoc
+// @Summary Получение информации о подписке по UUID
+// @Description Возвращает полную информацию об одной подписке, по предоставленному UUID
+// @Tags Подписки
+// @Produce json
+// @Param uuid path string true "UUID подписки" example("123e4567-e89b-12d3-a456-426614174000")
+// @Success 200 {object} handlers.SubscriptionResponceDTO "Найденная подписка пользователя"
+// @Failure 400 {object} handlers.ErrorDTO "Неверный запрос, пустой uuid"
+// @Failure 404 {object} handlers.ErrorDTO "Подписка с таким uuid не найдена"
+// @Failure 500 {object} handlers.ErrorDTO "Внутренняя ошибка работы сервера"
+// @Router /subscriptions/{uuid} [get]
 func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const logPrefix = "handlers.read.handler"
@@ -75,7 +86,7 @@ func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.Handler
 			return
 		}
 
-		dto := handlers.SubscriptionFullDTO{
+		dto := handlers.SubscriptionResponceDTO{
 			UUID: subscription.UUID,
 			SubscriptionDTO: handlers.SubscriptionDTO{
 				ServiceName: subscription.ServiceName,
@@ -86,7 +97,7 @@ func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.Handler
 			},
 		}
 
-		w.WriteHeader(http.StatusFound)
+		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 
 		if err := json.NewEncoder(w).Encode(dto); err != nil {
