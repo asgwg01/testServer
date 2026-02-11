@@ -188,7 +188,7 @@ func (s *Storage) GetSubscription(uuid string) (models.Subscription, error) {
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Info("SELECT Query error", slog.String("err", storage.ErrorSubscriptionNotFound.Error()))
-			return models.Subscription{}, fmt.Errorf("SELECT Query error %s", storage.ErrorSubscriptionNotFound)
+			return models.Subscription{}, storage.ErrorSubscriptionNotFound
 		} else {
 			log.Error("SELECT Query error", slog.String("err", err.Error()))
 			return models.Subscription{}, err
@@ -310,7 +310,7 @@ func (s *Storage) DeleteSubscription(uuid string) error {
 		if err != nil {
 			tx.Rollback()
 			log.Error("Error check subscription exists", slog.String("uuid", uuid))
-			return fmt.Errorf("SELECT error %s", err)
+			return storage.ErrorSubscriptionNotFound
 		}
 
 		var exists bool

@@ -14,10 +14,11 @@ import (
 
 // GetSubscription godoc
 // @Summary Получение информации о подписке по UUID
-// @Description Возвращает полную информацию об одной подписке, по предоставленному UUID
+// @Description
+// @Description Возвращает полную информацию об одной подписке, по предоставленному `uuid`
 // @Tags Подписки
 // @Produce json
-// @Param uuid path string true "UUID подписки" example("123e4567-e89b-12d3-a456-426614174000")
+// @Param uuid path string true "UUID подписки" example("123e4567-e89b-12d3-a456-426614174000", "10000000-0000-0000-0000-000000000000")
 // @Success 200 {object} handlers.SubscriptionResponceDTO "Найденная подписка пользователя"
 // @Failure 400 {object} handlers.ErrorDTO "Неверный запрос, пустой uuid"
 // @Failure 404 {object} handlers.ErrorDTO "Подписка с таким uuid не найдена"
@@ -86,14 +87,15 @@ func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.Handler
 			return
 		}
 
+		tmpCustomTime := handlers.CustomTime(*subscription.EndDate)
 		dto := handlers.SubscriptionResponceDTO{
 			UUID: subscription.UUID,
 			SubscriptionDTO: handlers.SubscriptionDTO{
 				ServiceName: subscription.ServiceName,
 				Price:       subscription.Price,
 				UserUUID:    subscription.UserUUID,
-				StartDate:   handlers.CustomTime{Time: subscription.StartDate},
-				EndDate:     &handlers.CustomTime{Time: *subscription.EndDate},
+				StartDate:   handlers.CustomTime(subscription.StartDate),
+				EndDate:     &tmpCustomTime,
 			},
 		}
 

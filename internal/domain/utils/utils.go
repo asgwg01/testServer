@@ -11,14 +11,15 @@ func SubscriptionsToDTO(subs []models.Subscription) []handlers.SubscriptionFullD
 	result := make([]handlers.SubscriptionFullDTO, len(subs))
 
 	for i, s := range subs {
+		tmpCustomTime := handlers.CustomTime(*s.EndDate)
 		result[i] = handlers.SubscriptionFullDTO{
 			UUID: s.UUID,
 			SubscriptionDTO: handlers.SubscriptionDTO{
 				ServiceName: s.ServiceName,
 				Price:       s.Price,
 				UserUUID:    s.UserUUID,
-				StartDate:   handlers.CustomTime{Time: s.StartDate},
-				EndDate:     &handlers.CustomTime{Time: *s.EndDate},
+				StartDate:   handlers.CustomTime(s.StartDate),
+				EndDate:     &tmpCustomTime,
 			},
 		}
 	}

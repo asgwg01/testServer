@@ -42,7 +42,7 @@ func (s *Storage) GetSubscription(uuid string) (models.Subscription, error) {
 	// 	UUID:        "1",
 	// 	ServiceName: "Yandex plus",
 	// 	Price:       399,
-	// 	UserUUID:    "1",
+	// 	UserUUID:    "1",	
 	// 	StartDate:   time.Now(),
 	// 	EndDate:     &endDate,
 	// }, nil

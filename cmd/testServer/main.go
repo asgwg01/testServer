@@ -14,10 +14,10 @@ import (
 
 // @title Тестовое задание
 // @version 1.0
-// @description REST Сервер для агрегации данных о подписках пользователей на сервисы
+// @description **REST Сервер для агрегации данных о подписках пользователей на сервисы**
 // @host localhost:8090
 // @BasePath /
-// @schemes http https
+// @schemes http
 func main() {
 	// init config
 	config := config.LoadConfig()

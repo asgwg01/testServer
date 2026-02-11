@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/cost": {
             "get": {
-                "description": "Возвращает информацию о суммарной стоимости и количестве подписок удовлетворяющих фильтрам.\nТакже возвращает указанные фильтры",
+                "description": "Возвращает информацию о суммарной стоимости и количестве подписок удовлетворяющих фильтрам.\n\nТакже возвращает указанные фильтры",
                 "produces": [
                     "application/json"
                 ],
@@ -28,28 +28,30 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "\"\"",
-                        "example": "\"123e4567-e89b-12d3-a456-426614174000\"",
+                        "default": "",
+                        "example": "\"123e4567-e89b-12d3-a456-426614174000\", \"10000000-0000-0000-0000-000000000000\"",
                         "description": "uuid пользователя для которого будут фильтроваться подписки",
                         "name": "user_uuid",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "default": "\"\"",
+                        "default": "",
                         "example": "\"Яндекс плюс\"",
                         "description": "Имя сервиса для которого будут фильтроваться подписки",
                         "name": "service_name",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
+                        "example": "\"07-2025\"",
                         "description": "С какого месяца фильтруются подписки",
                         "name": "from",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
+                        "example": "\"07-2025\"",
                         "description": "До какого месяца фильтруются подписки",
                         "name": "to",
                         "in": "query"
@@ -90,28 +92,30 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "\"\"",
-                        "example": "\"123e4567-e89b-12d3-a456-426614174000\"",
+                        "default": "",
+                        "example": "\"123e4567-e89b-12d3-a456-426614174000\", \"10000000-0000-0000-0000-000000000000\"",
                         "description": "uuid пользователя для которого будут фильтроваться подписки",
                         "name": "user_uuid",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "default": "\"\"",
+                        "default": "",
                         "example": "\"Яндекс плюс\"",
                         "description": "Имя сервиса для которого будут фильтроваться подписки",
                         "name": "service_name",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
+                        "example": "\"07-2025\"",
                         "description": "С какого месяца фильтруются подписки",
                         "name": "from",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
+                        "example": "\"07-2025\"",
                         "description": "До какого месяца фильтруются подписки",
                         "name": "to",
                         "in": "query"
@@ -142,7 +146,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Создает для пользователя user_id (на самом деле передается UUID)\nподписку на сервис с именем service_name.\nprice - цена подписки за месяц, указывается целое число рублей\nПодписка действует с первого числа месяца указанного в start_date. Формат \"ММ-ГГГГ\" (например 07-2025).\nПо умолчанию подписка дейтвует 30 дней, можно указать end_date в таком же формате - \"ММ-ГГГГ\",\nтогда подписка будет действовать до первого числа указанного в end_date месяца. end_date - не обязательный параметр.\nЕсли пользователя с таким uuid не существует, или не существует сервиса с именем service_name\nто ничего не создает и возвращает ошибку с указанной причиной.\nВалидация: user_id, service_name не должны быть пустыми. price не отрицательное, целое число\nstart_date задано, имеет формат \"ММ-ГГГГ\" и отличается 01-1970 (т.е. не по умолчанию)\nend_date может быть не задано, но если задано, имеет формат \"ММ-ГГГГ\" и отличается 01-1970 (т.е. не по умолчанию)\nа также не может быть ранее start_date",
+                "description": "Создает подписку для пользователя.\n\n**Параметры:**\n- ` + "`" + `user_id` + "`" + ` - UUID пользователя (обязательный).\n- ` + "`" + `service_name` + "`" + ` - название сервиса (обязательное).\n- ` + "`" + `price` + "`" + ` - цена подписки за месяц в рублях (целое неотрицательное число, обязательное).\n- ` + "`" + `start_date` + "`" + ` - дата начала подписки в формате ` + "`" + `ММ‑ГГГГ` + "`" + ` (например, ` + "`" + `07‑2025` + "`" + `). Подписка действует с первого числа указанного месяца (обязательное, не может быть ` + "`" + `01‑1970` + "`" + `).\n- ` + "`" + `end_date` + "`" + ` - дата окончания подписки в формате ` + "`" + `ММ‑ГГГГ` + "`" + ` (необязательное). Если указано, подписка действует до первого числа указанного месяца. Должно быть не ранее ` + "`" + `start_date` + "`" + ` и не равно ` + "`" + `01‑1970` + "`" + `.\n\n**Логика работы:**\n- Если пользователь с указанным ` + "`" + `user_id` + "`" + ` не существует - возвращается ошибка.\n- Если сервис с именем ` + "`" + `service_name` + "`" + ` не найден - возвращается ошибка.\n- Если ` + "`" + `end_date` + "`" + ` не указано, подписка действует 30 дней.\n\n**Валидация:**\n- ` + "`" + `user_id` + "`" + ` и ` + "`" + `service_name` + "`" + ` не могут быть пустыми.\n- ` + "`" + `price` + "`" + ` должно быть целым неотрицательным числом.\n- ` + "`" + `start_date` + "`" + ` обязательно, должно соответствовать формату ` + "`" + `ММ‑ГГГГ` + "`" + ` и не быть ` + "`" + `01‑1970` + "`" + `.\n- ` + "`" + `end_date` + "`" + `, если указано, должно соответствовать формату ` + "`" + `ММ‑ГГГГ` + "`" + `, не быть ` + "`" + `01‑1970` + "`" + ` и не предшествовать ` + "`" + `start_date` + "`" + `.",
                 "consumes": [
                     "application/json"
                 ],
@@ -153,6 +157,17 @@ const docTemplate = `{
                     "Подписки"
                 ],
                 "summary": "Создание новой подписки",
+                "parameters": [
+                    {
+                        "description": "Данные новой подписки",
+                        "name": "json",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SubscriptionRequestDTO"
+                        }
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Созданная подписка",
@@ -187,7 +202,7 @@ const docTemplate = `{
                 }
             },
             "patch": {
-                "description": "Изменяет существующую подписку с указанным во входящем json(назовем входящий json как in) uuid.\nИзменяет service_name на сервис с именем in.service_name.\nИзменяет user_id на uuid пользователя in.user_id. В поле user_id на самом деле лежит UUID.\nИзменяет price на in.price.\nИзменяет start_date на in.start_date.\nИзменяет end_date на in.end_date.\nЕсли пользователя с in.user_id не существует, или не существует сервиса с именем in.service_name\nто ничего не меняет и возвращает ошибку с указанной причиной.\nВалидация: in.user_id, in.service_name не должны быть пустыми. in.price не отрицательное, целое число\nin.start_date задано, имеет формат \"ММ-ГГГГ\" и отличается 01-1970 (т.е. не по умолчанию)\nin.end_date может быть не задано, но если задано, имеет формат \"ММ-ГГГГ\" и отличается 01-1970 (т.е. не по умолчанию)\nа также не может быть ранее in.start_date",
+                "description": "Изменяет существующую подписку.\n\n**Входные данные (JSON‑объект ` + "`" + `in` + "`" + `):**\n- ` + "`" + `uuid` + "`" + ` - идентификатор подписки, которую необходимо изменить (обязательный).\n- ` + "`" + `user_id` + "`" + ` - UUID пользователя (обязательный, не может быть пустым).\n- ` + "`" + `service_name` + "`" + ` - новое название сервиса (обязательное, не может быть пустым).\n- ` + "`" + `price` + "`" + ` - новая цена подписки за месяц в рублях (целое неотрицательное число, обязательное).\n- ` + "`" + `start_date` + "`" + ` - новая дата начала подписки в формате ` + "`" + `ММ‑ГГГГ` + "`" + ` (например, ` + "`" + `07‑2025` + "`" + `). Подписка действует с первого числа указанного месяца (обязательное, не может быть ` + "`" + `01‑1970` + "`" + `).\n- ` + "`" + `end_date` + "`" + ` - новая дата окончания подписки в формате ` + "`" + `ММ‑ГГГГ` + "`" + ` (необязательное). Если указано, подписка действует до первого числа указанного месяца. Должно быть не ранее ` + "`" + `start_date` + "`" + ` и не равно ` + "`" + `01‑1970` + "`" + `.\n\n**Логика работы:**\n- Если подписка с указанным ` + "`" + `uuid` + "`" + ` не найдена - возвращается ошибка.\n- Если пользователь с указанным ` + "`" + `in.user_id` + "`" + ` не существует - возвращается ошибка.\n- Если сервис с именем ` + "`" + `in.service_name` + "`" + ` не найден - возвращается ошибка.\n- Все указанные поля заменяют соответствующие значения в существующей подписке.\n\n**Валидация:**\n- ` + "`" + `in.user_id` + "`" + ` и ` + "`" + `in.service_name` + "`" + ` не могут быть пустыми.\n- ` + "`" + `in.price` + "`" + ` должно быть целым неотрицательным числом.\n- ` + "`" + `in.start_date` + "`" + ` обязательно, должно соответствовать формату ` + "`" + `ММ‑ГГГГ` + "`" + ` и не быть ` + "`" + `01‑1970` + "`" + `.\n- ` + "`" + `in.end_date` + "`" + `, если указано, должно соответствовать формату ` + "`" + `ММ‑ГГГГ` + "`" + `, не быть ` + "`" + `01‑1970` + "`" + ` и не предшествовать ` + "`" + `in.start_date` + "`" + `.\n",
                 "consumes": [
                     "application/json"
                 ],
@@ -198,6 +213,17 @@ const docTemplate = `{
                     "Подписки"
                 ],
                 "summary": "Изменение подписки",
+                "parameters": [
+                    {
+                        "description": "Новые данные для подписки",
+                        "name": "json",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SubscriptionFullDTO"
+                        }
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Созданная подписка",
@@ -228,7 +254,7 @@ const docTemplate = `{
         },
         "/subscriptions/{uuid}": {
             "get": {
-                "description": "Возвращает полную информацию об одной подписке, по предоставленному UUID",
+                "description": "Возвращает полную информацию об одной подписке, по предоставленному ` + "`" + `uuid` + "`" + `",
                 "produces": [
                     "application/json"
                 ],
@@ -239,7 +265,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "\"123e4567-e89b-12d3-a456-426614174000\"",
+                        "example": "\"123e4567-e89b-12d3-a456-426614174000\", \"10000000-0000-0000-0000-000000000000\"",
                         "description": "UUID подписки",
                         "name": "uuid",
                         "in": "path",
@@ -274,7 +300,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Удаляет существующую подписку с указанным uuid.\nЕсли подписки с таким uuid не существует, ничего не делает, возвращает информацию о ошибке.",
+                "description": "Удаляет существующую подписку с указанным ` + "`" + `uuid` + "`" + `.\n\nЕсли подписки с таким ` + "`" + `uuid` + "`" + ` не существует, ничего не делает, возвращает информацию о ошибке.",
                 "produces": [
                     "application/json"
                 ],
@@ -285,7 +311,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "\"123e4567-e89b-12d3-a456-426614174000\"",
+                        "example": "\"123e4567-e89b-12d3-a456-426614174000\", \"10000000-0000-0000-0000-000000000000\"",
                         "description": "UUID подписки",
                         "name": "uuid",
                         "in": "path",
@@ -340,18 +366,11 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.CustomTime": {
-            "type": "object",
-            "properties": {
-                "time": {
-                    "type": "string"
-                }
-            }
-        },
         "handlers.ErrorDTO": {
             "type": "object",
             "properties": {
                 "error": {
+                    "description": "Error содержит строку с расшифровкой того что пошло не так\nminLength: 1\nmaxLength: 100\nexample: subscription not found",
                     "type": "string"
                 }
             }
@@ -361,11 +380,7 @@ const docTemplate = `{
             "properties": {
                 "from": {
                     "description": "From месяц старта подписки\nformat: date-time\nexample: 07-2025",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/handlers.CustomTime"
-                        }
-                    ]
+                    "type": "string"
                 },
                 "service_name": {
                     "description": "ServiceName название сервиса подписки\nminLength: 1\nmaxLength: 100\nexample: Яндекс плюс",
@@ -373,11 +388,61 @@ const docTemplate = `{
                 },
                 "to": {
                     "description": "EndDate месяц окончания подписки\nformat: date-time\nnullable: true\nexample: null",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/handlers.CustomTime"
-                        }
-                    ]
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "UserUUID UUID пользователя\nformat: uuid\nexample: 123e4567-e89b-12d3-a456-426614174000",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.SubscriptionFullDTO": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "description": "EndDate месяц окончания подписки\nformat: date-time\nnullable: true\nexample: null",
+                    "type": "string"
+                },
+                "price": {
+                    "description": "Price стоимость подписки в рублях в месяц, целое число\nminimum: 1\nexample: 399",
+                    "type": "integer"
+                },
+                "service_name": {
+                    "description": "ServiceName название сервиса подписки\nminLength: 1\nmaxLength: 100\nexample: Яндекс плюс",
+                    "type": "string"
+                },
+                "start_date": {
+                    "description": "StartDate месяц старта подписки\nformat: date-time\nexample: 07-2025",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "UserUUID UUID пользователя\nformat: uuid\nexample: 123e4567-e89b-12d3-a456-426614174000",
+                    "type": "string"
+                },
+                "uuid": {
+                    "description": "UserUUID UUID подписки\nformat: uuid\nexample: 123e4567-e89b-12d3-a456-426614174000",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.SubscriptionRequestDTO": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "description": "EndDate месяц окончания подписки\nformat: date-time\nnullable: true\nexample: null",
+                    "type": "string"
+                },
+                "price": {
+                    "description": "Price стоимость подписки в рублях в месяц, целое число\nminimum: 1\nexample: 399",
+                    "type": "integer"
+                },
+                "service_name": {
+                    "description": "ServiceName название сервиса подписки\nminLength: 1\nmaxLength: 100\nexample: Яндекс плюс",
+                    "type": "string"
+                },
+                "start_date": {
+                    "description": "StartDate месяц старта подписки\nformat: date-time\nexample: 07-2025",
+                    "type": "string"
                 },
                 "user_id": {
                     "description": "UserUUID UUID пользователя\nformat: uuid\nexample: 123e4567-e89b-12d3-a456-426614174000",
@@ -390,11 +455,7 @@ const docTemplate = `{
             "properties": {
                 "end_date": {
                     "description": "EndDate месяц окончания подписки\nformat: date-time\nnullable: true\nexample: null",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/handlers.CustomTime"
-                        }
-                    ]
+                    "type": "string"
                 },
                 "price": {
                     "description": "Price стоимость подписки в рублях в месяц, целое число\nminimum: 1\nexample: 399",
@@ -406,11 +467,7 @@ const docTemplate = `{
                 },
                 "start_date": {
                     "description": "StartDate месяц старта подписки\nformat: date-time\nexample: 07-2025",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/handlers.CustomTime"
-                        }
-                    ]
+                    "type": "string"
                 },
                 "user_id": {
                     "description": "UserUUID UUID пользователя\nformat: uuid\nexample: 123e4567-e89b-12d3-a456-426614174000",
@@ -430,9 +487,9 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8090",
 	BasePath:         "/",
-	Schemes:          []string{"http", "https"},
+	Schemes:          []string{"http"},
 	Title:            "Тестовое задание",
-	Description:      "REST Сервер для агрегации данных о подписках пользователей на сервисы",
+	Description:      "**REST Сервер для агрегации данных о подписках пользователей на сервисы**",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

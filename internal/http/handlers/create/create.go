@@ -14,20 +14,28 @@ import (
 
 // CreateSubscription godoc
 // @Summary Создание новой подписки
-// @Description Создает для пользователя user_id (на самом деле передается UUID)
-// @Description подписку на сервис с именем service_name.
-// @Description price - цена подписки за месяц, указывается целое число рублей
-// @Description Подписка действует с первого числа месяца указанного в start_date. Формат "ММ-ГГГГ" (например 07-2025).
-// @Description По умолчанию подписка дейтвует 30 дней, можно указать end_date в таком же формате - "ММ-ГГГГ",
-// @Description тогда подписка будет действовать до первого числа указанного в end_date месяца. end_date - не обязательный параметр.
-// @Description Если пользователя с таким uuid не существует, или не существует сервиса с именем service_name
-// @Description то ничего не создает и возвращает ошибку с указанной причиной.
-// @Description Валидация: user_id, service_name не должны быть пустыми. price не отрицательное, целое число
-// @Description start_date задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
-// @Description end_date может быть не задано, но если задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
-// @Description а также не может быть ранее start_date
+// @Description Создает подписку для пользователя.
+// @Description
+// @Description **Параметры:**
+// @Description - `user_id` - UUID пользователя (обязательный).
+// @Description - `service_name` - название сервиса (обязательное).
+// @Description - `price` - цена подписки за месяц в рублях (целое неотрицательное число, обязательное).
+// @Description - `start_date` - дата начала подписки в формате `ММ‑ГГГГ` (например, `07‑2025`). Подписка действует с первого числа указанного месяца (обязательное, не может быть `01‑1970`).
+// @Description - `end_date` - дата окончания подписки в формате `ММ‑ГГГГ` (необязательное). Если указано, подписка действует до первого числа указанного месяца. Должно быть не ранее `start_date` и не равно `01‑1970`.
+// @Description
+// @Description **Логика работы:**
+// @Description - Если пользователь с указанным `user_id` не существует - возвращается ошибка.
+// @Description - Если сервис с именем `service_name` не найден - возвращается ошибка.
+// @Description - Если `end_date` не указано, подписка действует 30 дней.
+// @Description
+// @Description **Валидация:**
+// @Description - `user_id` и `service_name` не могут быть пустыми.
+// @Description - `price` должно быть целым неотрицательным числом.
+// @Description - `start_date` обязательно, должно соответствовать формату `ММ‑ГГГГ` и не быть `01‑1970`.
+// @Description - `end_date`, если указано, должно соответствовать формату `ММ‑ГГГГ`, не быть `01‑1970` и не предшествовать `start_date`.
 // @Tags Подписки
 // @Accept json
+// @Param json body handlers.SubscriptionRequestDTO true "Данные новой подписки"
 // @Produce json
 // @Success 201 {object} handlers.SubscriptionResponceDTO "Созданная подписка"
 // @Failure 400 {object} handlers.ErrorDTO "Неверный запрос, ошибка во входящем json, ошибка валидации json"
@@ -80,16 +88,18 @@ func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.Han
 
 		if dto.EndDate == nil {
 			// По умолчанию подписка на месяц
-			endDate := dto.StartDate.Time.Add(time.Hour * 24 * 30)
-			dto.EndDate = &handlers.CustomTime{Time: endDate}
+			endDate := time.Time(dto.StartDate).Add(time.Hour * 24 * 30)
+			tmpCustomTime := handlers.CustomTime(endDate)
+			dto.EndDate = &tmpCustomTime
 		}
 
+		tmpTime := time.Time(*dto.EndDate)
 		subscription := models.Subscription{
 			UserUUID:    dto.UserUUID,
 			ServiceName: dto.ServiceName,
 			Price:       dto.Price,
-			StartDate:   dto.StartDate.Time,
-			EndDate:     &dto.EndDate.Time,
+			StartDate:   time.Time(dto.StartDate),
+			EndDate:     &tmpTime,
 		}
 
 		createdSubscription, err := creator.CreateSubscription(subscription)
@@ -163,14 +173,15 @@ func NewHandler(log *slog.Logger, creator storage.ISubscriptionCreator) http.Han
 			}
 		}
 
+		tmpCustomTime := handlers.CustomTime(*createdSubscription.EndDate)
 		createdDto := handlers.SubscriptionResponceDTO{
 			UUID: createdSubscription.UUID,
 			SubscriptionDTO: handlers.SubscriptionDTO{
 				ServiceName: createdSubscription.ServiceName,
 				UserUUID:    createdSubscription.UserUUID,
 				Price:       createdSubscription.Price,
-				StartDate:   handlers.CustomTime{Time: createdSubscription.StartDate},
-				EndDate:     &handlers.CustomTime{Time: *createdSubscription.EndDate},
+				StartDate:   handlers.CustomTime(createdSubscription.StartDate),
+				EndDate:     &tmpCustomTime,
 			},
 		}
 

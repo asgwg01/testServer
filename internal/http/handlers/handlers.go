@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/url"
 	"testSrv/internal/domain/filter"
@@ -15,14 +16,17 @@ var (
 	ErrValidateEndDate     = errors.New("invalid end date")
 )
 
+// ErrorDTO DTO для описания ошибки
 type ErrorDTO struct {
+	// Error содержит строку с расшифровкой того что пошло не так
+	// minLength: 1
+	// maxLength: 100
+	// example: subscription not found
 	Error string `json:"error"`
 }
 
 // Для коректного анмаршалинга “07-2025”
-type CustomTime struct {
-	Time time.Time
-}
+type CustomTime time.Time
 
 func (ct *CustomTime) UnmarshalJSON(data []byte) error {
 	str := string(data[1 : len(data)-1])
@@ -31,8 +35,14 @@ func (ct *CustomTime) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	ct.Time = parsedTime
+	*ct = CustomTime(parsedTime)
 	return nil
+}
+
+func (ct CustomTime) MarshalJSON() ([]byte, error) {
+	layout := "01-2006" // Из текста задания
+	formatted := time.Time(ct).Format(layout)
+	return json.Marshal(formatted)
 }
 
 // SubscriptionDTO DTO для описания подписки
@@ -125,12 +135,12 @@ func ValidateDTO(dto SubscriptionRequestDTO) error {
 		err = errors.Join(err, ErrValidatePrice)
 	}
 
-	if dto.StartDate.Time.IsZero() {
+	if time.Time(dto.StartDate).IsZero() {
 		err = errors.Join(err, ErrValidateStartDate)
 	}
 
 	if dto.EndDate != nil {
-		if dto.EndDate.Time.IsZero() || dto.EndDate.Time.Before(dto.StartDate.Time) {
+		if time.Time(*dto.EndDate).IsZero() || time.Time(*dto.EndDate).Before(time.Time(dto.StartDate)) {
 			err = errors.Join(err, ErrValidateEndDate)
 		}
 	}

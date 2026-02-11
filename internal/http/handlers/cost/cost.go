@@ -12,13 +12,14 @@ import (
 // GetSubscriptionsCost godoc
 // @Summary Получение информации о стоимости подписок с использованием фильтра
 // @Description Возвращает информацию о суммарной стоимости и количестве подписок удовлетворяющих фильтрам.
+// @Description
 // @Description Также возвращает указанные фильтры
 // @Tags Стоимость
 // @Produce json
-// @Param user_uuid query string false "uuid пользователя для которого будут фильтроваться подписки" example("123e4567-e89b-12d3-a456-426614174000") default("")
-// @Param service_name query string false "Имя сервиса для которого будут фильтроваться подписки" example("Яндекс плюс") default("")
-// @Param from query int false "С какого месяца фильтруются подписки" format:"date-time" example("07-2025")
-// @Param to query int false "До какого месяца фильтруются подписки" format:"date-time" example("07-2025")
+// @Param user_uuid query string false "uuid пользователя для которого будут фильтроваться подписки" example("123e4567-e89b-12d3-a456-426614174000", "10000000-0000-0000-0000-000000000000") default()
+// @Param service_name query string false "Имя сервиса для которого будут фильтроваться подписки" example("Яндекс плюс") default()
+// @Param from query string false "С какого месяца фильтруются подписки" format:"date-time" example("07-2025")
+// @Param to query string false "До какого месяца фильтруются подписки" format:"date-time" example("07-2025")
 // @Success 200 {object} handlers.CostDTO "Все подписки удовлетворяющие фильтрам"
 // @Failure 400 {object} handlers.ErrorDTO "Неверный запрос, неверные фильтры, ошибка в формате даты"
 // @Failure 500 {object} handlers.ErrorDTO "Внутренняя ошибка работы сервера"
@@ -81,10 +82,12 @@ func NewHandler(log *slog.Logger, geter storage.ISubscriptionGeter) http.Handler
 			UserUUID:    filter.UserUUID,
 		}
 		if filter.From != nil {
-			dto.Filter.From = &handlers.CustomTime{Time: *filter.From}
+			tmpCustomTime := handlers.CustomTime(*filter.From)
+			dto.Filter.From = &tmpCustomTime
 		}
 		if filter.To != nil {
-			dto.Filter.To = &handlers.CustomTime{Time: *filter.To}
+			tmpCustomTime := handlers.CustomTime(*filter.To)
+			dto.Filter.To = &tmpCustomTime
 		}
 
 		w.WriteHeader(http.StatusOK)

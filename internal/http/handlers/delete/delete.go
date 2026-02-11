@@ -14,11 +14,12 @@ import (
 
 // DeleteSubscription godoc
 // @Summary Удаление подписки
-// @Description Удаляет существующую подписку с указанным uuid.
-// @Description Если подписки с таким uuid не существует, ничего не делает, возвращает информацию о ошибке.
+// @Description Удаляет существующую подписку с указанным `uuid`.
+// @Description
+// @Description Если подписки с таким `uuid` не существует, ничего не делает, возвращает информацию о ошибке.
 // @Tags Подписки
 // @Produce json
-// @Param uuid path string true "UUID подписки" example("123e4567-e89b-12d3-a456-426614174000")
+// @Param uuid path string true "UUID подписки" example("123e4567-e89b-12d3-a456-426614174000", "10000000-0000-0000-0000-000000000000")
 // @Success 202 "Подписка удалена"
 // @Failure 400 {object} handlers.ErrorDTO "Неверный запрос, пустой uuid"
 // @Failure 404 {object} handlers.ErrorDTO "Не найдена подписка с указанным uuid"

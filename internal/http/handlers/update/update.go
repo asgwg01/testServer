@@ -9,24 +9,36 @@ import (
 	"testSrv/internal/domain/models"
 	"testSrv/internal/http/handlers"
 	"testSrv/internal/storage"
+	"time"
 )
 
 // UpdateSubscription godoc
 // @Summary Изменение подписки
-// @Description Изменяет существующую подписку с указанным во входящем json(назовем входящий json как in) uuid.
-// @Description Изменяет service_name на сервис с именем in.service_name.
-// @Description Изменяет user_id на uuid пользователя in.user_id. В поле user_id на самом деле лежит UUID.
-// @Description Изменяет price на in.price.
-// @Description Изменяет start_date на in.start_date.
-// @Description Изменяет end_date на in.end_date.
-// @Description Если пользователя с in.user_id не существует, или не существует сервиса с именем in.service_name
-// @Description то ничего не меняет и возвращает ошибку с указанной причиной.
-// @Description Валидация: in.user_id, in.service_name не должны быть пустыми. in.price не отрицательное, целое число
-// @Description in.start_date задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
-// @Description in.end_date может быть не задано, но если задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
-// @Description а также не может быть ранее in.start_date
+// @Description Изменяет существующую подписку.
+// @Description
+// @Description **Входные данные (JSON‑объект `in`):**
+// @Description - `uuid` - идентификатор подписки, которую необходимо изменить (обязательный).
+// @Description - `user_id` - UUID пользователя (обязательный, не может быть пустым).
+// @Description - `service_name` - новое название сервиса (обязательное, не может быть пустым).
+// @Description - `price` - новая цена подписки за месяц в рублях (целое неотрицательное число, обязательное).
+// @Description - `start_date` - новая дата начала подписки в формате `ММ‑ГГГГ` (например, `07‑2025`). Подписка действует с первого числа указанного месяца (обязательное, не может быть `01‑1970`).
+// @Description - `end_date` - новая дата окончания подписки в формате `ММ‑ГГГГ` (необязательное). Если указано, подписка действует до первого числа указанного месяца. Должно быть не ранее `start_date` и не равно `01‑1970`.
+// @Description
+// @Description **Логика работы:**
+// @Description - Если подписка с указанным `uuid` не найдена - возвращается ошибка.
+// @Description - Если пользователь с указанным `in.user_id` не существует - возвращается ошибка.
+// @Description - Если сервис с именем `in.service_name` не найден - возвращается ошибка.
+// @Description - Все указанные поля заменяют соответствующие значения в существующей подписке.
+// @Description
+// @Description **Валидация:**
+// @Description - `in.user_id` и `in.service_name` не могут быть пустыми.
+// @Description - `in.price` должно быть целым неотрицательным числом.
+// @Description - `in.start_date` обязательно, должно соответствовать формату `ММ‑ГГГГ` и не быть `01‑1970`.
+// @Description - `in.end_date`, если указано, должно соответствовать формату `ММ‑ГГГГ`, не быть `01‑1970` и не предшествовать `in.start_date`.
+// @Description
 // @Tags Подписки
 // @Accept json
+// @Param json body handlers.SubscriptionFullDTO true "Новые данные для подписки"
 // @Produce json
 // @Success 201 {object} handlers.SubscriptionResponceDTO "Созданная подписка"
 // @Failure 400 {object} handlers.ErrorDTO "Неверный запрос, ошибка во входящем json, ошибка валидации json"
@@ -76,13 +88,14 @@ func NewHandler(log *slog.Logger, updater storage.ISubscriptionUpdater) http.Han
 			}
 		}
 
+		tmpTime := time.Time(*changedDto.EndDate)
 		subscription := models.Subscription{
 			UUID:        changedDto.UUID,
 			UserUUID:    changedDto.UserUUID,
 			ServiceName: changedDto.ServiceName,
 			Price:       changedDto.Price,
-			StartDate:   changedDto.StartDate.Time,
-			EndDate:     &changedDto.EndDate.Time,
+			StartDate:   time.Time(changedDto.StartDate),
+			EndDate:     &tmpTime,
 		}
 
 		updatedSubscription, err := updater.UpdateSubscription(subscription)
@@ -123,14 +136,15 @@ func NewHandler(log *slog.Logger, updater storage.ISubscriptionUpdater) http.Han
 			}
 		}
 
+		tmpCustomTime := handlers.CustomTime(*updatedSubscription.EndDate)
 		updatedDto := handlers.SubscriptionResponceDTO{
 			UUID: updatedSubscription.UUID,
 			SubscriptionDTO: handlers.SubscriptionDTO{
 				ServiceName: updatedSubscription.ServiceName,
 				UserUUID:    updatedSubscription.UserUUID,
 				Price:       updatedSubscription.Price,
-				StartDate:   handlers.CustomTime{Time: updatedSubscription.StartDate},
-				EndDate:     &handlers.CustomTime{Time: *updatedSubscription.EndDate},
+				StartDate:   handlers.CustomTime(updatedSubscription.StartDate),
+				EndDate:     &tmpCustomTime,
 			},
 		}
 

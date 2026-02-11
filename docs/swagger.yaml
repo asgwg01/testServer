@@ -19,25 +19,24 @@ definitions:
           example: 798
         type: integer
     type: object
-  handlers.CustomTime:
-    properties:
-      time:
-        type: string
-    type: object
   handlers.ErrorDTO:
     properties:
       error:
+        description: |-
+          Error содержит строку с расшифровкой того что пошло не так
+          minLength: 1
+          maxLength: 100
+          example: subscription not found
         type: string
     type: object
   handlers.FilterDTO:
     properties:
       from:
-        allOf:
-        - $ref: '#/definitions/handlers.CustomTime'
         description: |-
           From месяц старта подписки
           format: date-time
           example: 07-2025
+        type: string
       service_name:
         description: |-
           ServiceName название сервиса подписки
@@ -46,13 +45,12 @@ definitions:
           example: Яндекс плюс
         type: string
       to:
-        allOf:
-        - $ref: '#/definitions/handlers.CustomTime'
         description: |-
           EndDate месяц окончания подписки
           format: date-time
           nullable: true
           example: null
+        type: string
       user_id:
         description: |-
           UserUUID UUID пользователя
@@ -60,16 +58,15 @@ definitions:
           example: 123e4567-e89b-12d3-a456-426614174000
         type: string
     type: object
-  handlers.SubscriptionResponceDTO:
+  handlers.SubscriptionFullDTO:
     properties:
       end_date:
-        allOf:
-        - $ref: '#/definitions/handlers.CustomTime'
         description: |-
           EndDate месяц окончания подписки
           format: date-time
           nullable: true
           example: null
+        type: string
       price:
         description: |-
           Price стоимость подписки в рублях в месяц, целое число
@@ -84,12 +81,87 @@ definitions:
           example: Яндекс плюс
         type: string
       start_date:
-        allOf:
-        - $ref: '#/definitions/handlers.CustomTime'
         description: |-
           StartDate месяц старта подписки
           format: date-time
           example: 07-2025
+        type: string
+      user_id:
+        description: |-
+          UserUUID UUID пользователя
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      uuid:
+        description: |-
+          UserUUID UUID подписки
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+    type: object
+  handlers.SubscriptionRequestDTO:
+    properties:
+      end_date:
+        description: |-
+          EndDate месяц окончания подписки
+          format: date-time
+          nullable: true
+          example: null
+        type: string
+      price:
+        description: |-
+          Price стоимость подписки в рублях в месяц, целое число
+          minimum: 1
+          example: 399
+        type: integer
+      service_name:
+        description: |-
+          ServiceName название сервиса подписки
+          minLength: 1
+          maxLength: 100
+          example: Яндекс плюс
+        type: string
+      start_date:
+        description: |-
+          StartDate месяц старта подписки
+          format: date-time
+          example: 07-2025
+        type: string
+      user_id:
+        description: |-
+          UserUUID UUID пользователя
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+    type: object
+  handlers.SubscriptionResponceDTO:
+    properties:
+      end_date:
+        description: |-
+          EndDate месяц окончания подписки
+          format: date-time
+          nullable: true
+          example: null
+        type: string
+      price:
+        description: |-
+          Price стоимость подписки в рублях в месяц, целое число
+          minimum: 1
+          example: 399
+        type: integer
+      service_name:
+        description: |-
+          ServiceName название сервиса подписки
+          minLength: 1
+          maxLength: 100
+          example: Яндекс плюс
+        type: string
+      start_date:
+        description: |-
+          StartDate месяц старта подписки
+          format: date-time
+          example: 07-2025
+        type: string
       user_id:
         description: |-
           UserUUID UUID пользователя
@@ -106,7 +178,7 @@ definitions:
 host: localhost:8090
 info:
   contact: {}
-  description: REST Сервер для агрегации данных о подписках пользователей на сервисы
+  description: '**REST Сервер для агрегации данных о подписках пользователей на сервисы**'
   title: Тестовое задание
   version: "1.0"
 paths:
@@ -114,28 +186,31 @@ paths:
     get:
       description: |-
         Возвращает информацию о суммарной стоимости и количестве подписок удовлетворяющих фильтрам.
+
         Также возвращает указанные фильтры
       parameters:
-      - default: '""'
+      - default: ""
         description: uuid пользователя для которого будут фильтроваться подписки
-        example: '"123e4567-e89b-12d3-a456-426614174000"'
+        example: '"123e4567-e89b-12d3-a456-426614174000", "10000000-0000-0000-0000-000000000000"'
         in: query
         name: user_uuid
         type: string
-      - default: '""'
+      - default: ""
         description: Имя сервиса для которого будут фильтроваться подписки
         example: '"Яндекс плюс"'
         in: query
         name: service_name
         type: string
       - description: С какого месяца фильтруются подписки
+        example: '"07-2025"'
         in: query
         name: from
-        type: integer
+        type: string
       - description: До какого месяца фильтруются подписки
+        example: '"07-2025"'
         in: query
         name: to
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -159,26 +234,28 @@ paths:
       description: Возвращает полную информацию о нескольких подписках, удовлетворяющих
         параметрам фильтрации
       parameters:
-      - default: '""'
+      - default: ""
         description: uuid пользователя для которого будут фильтроваться подписки
-        example: '"123e4567-e89b-12d3-a456-426614174000"'
+        example: '"123e4567-e89b-12d3-a456-426614174000", "10000000-0000-0000-0000-000000000000"'
         in: query
         name: user_uuid
         type: string
-      - default: '""'
+      - default: ""
         description: Имя сервиса для которого будут фильтроваться подписки
         example: '"Яндекс плюс"'
         in: query
         name: service_name
         type: string
       - description: С какого месяца фильтруются подписки
+        example: '"07-2025"'
         in: query
         name: from
-        type: integer
+        type: string
       - description: До какого месяца фильтруются подписки
+        example: '"07-2025"'
         in: query
         name: to
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -202,19 +279,35 @@ paths:
     patch:
       consumes:
       - application/json
-      description: |-
-        Изменяет существующую подписку с указанным во входящем json(назовем входящий json как in) uuid.
-        Изменяет service_name на сервис с именем in.service_name.
-        Изменяет user_id на uuid пользователя in.user_id. В поле user_id на самом деле лежит UUID.
-        Изменяет price на in.price.
-        Изменяет start_date на in.start_date.
-        Изменяет end_date на in.end_date.
-        Если пользователя с in.user_id не существует, или не существует сервиса с именем in.service_name
-        то ничего не меняет и возвращает ошибку с указанной причиной.
-        Валидация: in.user_id, in.service_name не должны быть пустыми. in.price не отрицательное, целое число
-        in.start_date задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
-        in.end_date может быть не задано, но если задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
-        а также не может быть ранее in.start_date
+      description: |
+        Изменяет существующую подписку.
+
+        **Входные данные (JSON‑объект `in`):**
+        - `uuid` - идентификатор подписки, которую необходимо изменить (обязательный).
+        - `user_id` - UUID пользователя (обязательный, не может быть пустым).
+        - `service_name` - новое название сервиса (обязательное, не может быть пустым).
+        - `price` - новая цена подписки за месяц в рублях (целое неотрицательное число, обязательное).
+        - `start_date` - новая дата начала подписки в формате `ММ‑ГГГГ` (например, `07‑2025`). Подписка действует с первого числа указанного месяца (обязательное, не может быть `01‑1970`).
+        - `end_date` - новая дата окончания подписки в формате `ММ‑ГГГГ` (необязательное). Если указано, подписка действует до первого числа указанного месяца. Должно быть не ранее `start_date` и не равно `01‑1970`.
+
+        **Логика работы:**
+        - Если подписка с указанным `uuid` не найдена - возвращается ошибка.
+        - Если пользователь с указанным `in.user_id` не существует - возвращается ошибка.
+        - Если сервис с именем `in.service_name` не найден - возвращается ошибка.
+        - Все указанные поля заменяют соответствующие значения в существующей подписке.
+
+        **Валидация:**
+        - `in.user_id` и `in.service_name` не могут быть пустыми.
+        - `in.price` должно быть целым неотрицательным числом.
+        - `in.start_date` обязательно, должно соответствовать формату `ММ‑ГГГГ` и не быть `01‑1970`.
+        - `in.end_date`, если указано, должно соответствовать формату `ММ‑ГГГГ`, не быть `01‑1970` и не предшествовать `in.start_date`.
+      parameters:
+      - description: Новые данные для подписки
+        in: body
+        name: json
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SubscriptionFullDTO'
       produces:
       - application/json
       responses:
@@ -242,18 +335,32 @@ paths:
       consumes:
       - application/json
       description: |-
-        Создает для пользователя user_id (на самом деле передается UUID)
-        подписку на сервис с именем service_name.
-        price - цена подписки за месяц, указывается целое число рублей
-        Подписка действует с первого числа месяца указанного в start_date. Формат "ММ-ГГГГ" (например 07-2025).
-        По умолчанию подписка дейтвует 30 дней, можно указать end_date в таком же формате - "ММ-ГГГГ",
-        тогда подписка будет действовать до первого числа указанного в end_date месяца. end_date - не обязательный параметр.
-        Если пользователя с таким uuid не существует, или не существует сервиса с именем service_name
-        то ничего не создает и возвращает ошибку с указанной причиной.
-        Валидация: user_id, service_name не должны быть пустыми. price не отрицательное, целое число
-        start_date задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
-        end_date может быть не задано, но если задано, имеет формат "ММ-ГГГГ" и отличается 01-1970 (т.е. не по умолчанию)
-        а также не может быть ранее start_date
+        Создает подписку для пользователя.
+
+        **Параметры:**
+        - `user_id` - UUID пользователя (обязательный).
+        - `service_name` - название сервиса (обязательное).
+        - `price` - цена подписки за месяц в рублях (целое неотрицательное число, обязательное).
+        - `start_date` - дата начала подписки в формате `ММ‑ГГГГ` (например, `07‑2025`). Подписка действует с первого числа указанного месяца (обязательное, не может быть `01‑1970`).
+        - `end_date` - дата окончания подписки в формате `ММ‑ГГГГ` (необязательное). Если указано, подписка действует до первого числа указанного месяца. Должно быть не ранее `start_date` и не равно `01‑1970`.
+
+        **Логика работы:**
+        - Если пользователь с указанным `user_id` не существует - возвращается ошибка.
+        - Если сервис с именем `service_name` не найден - возвращается ошибка.
+        - Если `end_date` не указано, подписка действует 30 дней.
+
+        **Валидация:**
+        - `user_id` и `service_name` не могут быть пустыми.
+        - `price` должно быть целым неотрицательным числом.
+        - `start_date` обязательно, должно соответствовать формату `ММ‑ГГГГ` и не быть `01‑1970`.
+        - `end_date`, если указано, должно соответствовать формату `ММ‑ГГГГ`, не быть `01‑1970` и не предшествовать `start_date`.
+      parameters:
+      - description: Данные новой подписки
+        in: body
+        name: json
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SubscriptionRequestDTO'
       produces:
       - application/json
       responses:
@@ -286,11 +393,12 @@ paths:
   /subscriptions/{uuid}:
     delete:
       description: |-
-        Удаляет существующую подписку с указанным uuid.
-        Если подписки с таким uuid не существует, ничего не делает, возвращает информацию о ошибке.
+        Удаляет существующую подписку с указанным `uuid`.
+
+        Если подписки с таким `uuid` не существует, ничего не делает, возвращает информацию о ошибке.
       parameters:
       - description: UUID подписки
-        example: '"123e4567-e89b-12d3-a456-426614174000"'
+        example: '"123e4567-e89b-12d3-a456-426614174000", "10000000-0000-0000-0000-000000000000"'
         in: path
         name: uuid
         required: true
@@ -317,10 +425,10 @@ paths:
       - Подписки
     get:
       description: Возвращает полную информацию об одной подписке, по предоставленному
-        UUID
+        `uuid`
       parameters:
       - description: UUID подписки
-        example: '"123e4567-e89b-12d3-a456-426614174000"'
+        example: '"123e4567-e89b-12d3-a456-426614174000", "10000000-0000-0000-0000-000000000000"'
         in: path
         name: uuid
         required: true
@@ -349,5 +457,4 @@ paths:
       - Подписки
 schemes:
 - http
-- https
 swagger: "2.0"

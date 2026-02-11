@@ -15,10 +15,10 @@ import (
 // @Description Возвращает полную информацию о нескольких подписках, удовлетворяющих параметрам фильтрации
 // @Tags Подписки
 // @Produce json
-// @Param user_uuid query string false "uuid пользователя для которого будут фильтроваться подписки" example("123e4567-e89b-12d3-a456-426614174000") default("")
-// @Param service_name query string false "Имя сервиса для которого будут фильтроваться подписки" example("Яндекс плюс") default("")
-// @Param from query int false "С какого месяца фильтруются подписки" format:"date-time" example("07-2025")
-// @Param to query int false "До какого месяца фильтруются подписки" format:"date-time" example("07-2025")
+// @Param user_uuid query string false "uuid пользователя для которого будут фильтроваться подписки" example("123e4567-e89b-12d3-a456-426614174000", "10000000-0000-0000-0000-000000000000") default()
+// @Param service_name query string false "Имя сервиса для которого будут фильтроваться подписки" example("Яндекс плюс") default()
+// @Param from query string false "С какого месяца фильтруются подписки" format:"date-time" example("07-2025")
+// @Param to query string false "До какого месяца фильтруются подписки" format:"date-time" example("07-2025")
 // @Success 200 {array} handlers.SubscriptionResponceDTO "Все подписки удовлетворяющие фильтрам"
 // @Failure 400 {object} handlers.ErrorDTO "Неверный запрос, неверные фильтры, ошибка в формате даты"
 // @Failure 500 {object} handlers.ErrorDTO "Внутренняя ошибка работы сервера"
